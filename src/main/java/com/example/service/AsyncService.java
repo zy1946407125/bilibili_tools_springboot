@@ -8,5 +8,5 @@ import java.util.Map;
 public interface AsyncService {
     void executeAsyncWatch(BVInfo bvInfo);
 
-    void executeAsyncLike(String bvid);
+    void executeAsyncLike(BVInfo bvInfo);
 }

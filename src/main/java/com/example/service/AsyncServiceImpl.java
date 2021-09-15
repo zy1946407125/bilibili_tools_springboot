@@ -6,6 +6,8 @@ import com.example.config.Task;
 import com.example.config.ThreadInfo;
 import com.example.entity.BVInfo;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +32,7 @@ public class AsyncServiceImpl implements AsyncService {
     @Override
     @Async("asyncServiceWatch")
     public void executeAsyncWatch(BVInfo bvInfo) {
-        logger.info("start executeAsync");
-        System.out.println("start executeAsync");
+        logger.info("start executeAsync watch");
         Integer nowView = bvInfo.getStartWatchNum();
         Integer oldView = bvInfo.getStartWatchNum();
         Integer tmpView = bvInfo.getStartWatchNum();
@@ -40,7 +41,7 @@ public class AsyncServiceImpl implements AsyncService {
             tmpView = nowView;
             nowView = bvViewAndLike.get("view");
             oldView = bvInfo.getStartWatchNum();
-            logger.info("当前数量：" + nowView);
+            logger.info("当前播放数量：" + nowView);
             if (nowView != null) {
                 if (oldView < nowView) {
                     //更新当前播放数
@@ -61,7 +62,7 @@ public class AsyncServiceImpl implements AsyncService {
                 Object urlContent_post = httpClientDemo.getUrlContent_Post(targetUrl, stringEntity);
                 logger.info(JSONObject.toJSONString(urlContent_post));
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(2000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -69,8 +70,7 @@ public class AsyncServiceImpl implements AsyncService {
                 break;
             }
         }
-        logger.info("end executeAsync");
-        System.out.println("end executeAsync");
+        logger.info("end executeAsync watch");
         threadInfo.releaseWatchThreadNum();
         if (task.getWatchTask(bvInfo.getBvid()) != null) {
             task.releaseWatchTask(bvInfo.getBvid(), 1);
@@ -78,27 +78,62 @@ public class AsyncServiceImpl implements AsyncService {
         Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
         Integer view = bvViewAndLike.get("view");
         //判断是否已经完成任务
-        if ((bvInfo.getStartWatchNum() + bvInfo.getNeedWatchNum() < view)) {
+        if ((bvInfo.getStartWatchNum() + bvInfo.getNeedWatchNum() <= view)) {
             //完成任务
-            logger.info("完成任务，当前数量：" + view);
-            task.updateBVInfo(bvInfo.getId(), "完成");
+            logger.info("完成播放任务，当前数量：" + view);
+            task.updateWatchBVInfo(bvInfo.getId(), "完成");
         } else if (task.getWatchTask(bvInfo.getBvid()) == null) {
             //强制停止
-            logger.info("强制停止");
-            task.updateBVInfo(bvInfo.getId(), "停止");
+            logger.info("强制停止，当前数量：" + view);
+            task.updateWatchBVInfo(bvInfo.getId(), "停止");
         }
     }
 
     @Override
     @Async("asyncServiceLike")
-    public void executeAsyncLike(String bvid) {
-        logger.info("start executeAsync");
-        System.out.println("start executeAsync");
-        int i = 1;
-        while (i < 10) {
-            if (task.getLikeTask(bvid) > 0) {
-                logger.info(String.valueOf(i));
-                i++;
+    public void executeAsyncLike(BVInfo bvInfo) {
+        logger.info("start executeAsync like");
+        Integer nowLike = bvInfo.getStartLikeNum();
+        Integer oldLike = bvInfo.getStartLikeNum();
+        Integer tmpLike = bvInfo.getStartLikeNum();
+        for (int i = 0; i < task.getAccounts().size(); i++) {
+            Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
+            tmpLike = nowLike;
+            nowLike = bvViewAndLike.get("like");
+            oldLike = bvInfo.getStartLikeNum();
+            logger.info("当前点赞数量：" + nowLike);
+            if (nowLike != null) {
+                if (oldLike < nowLike) {
+                    //更新当前点赞数
+                    upDateLike(bvInfo.getId(), nowLike);
+                }
+            } else {
+                nowLike = tmpLike;
+            }
+            if (task.getLikeTask(bvInfo.getBvid()) != null && (bvInfo.getStartLikeNum() + bvInfo.getNeedLikeNum() > nowLike)) {
+                String targetUrl = "https://api.bilibili.com/x/web-interface/archive/like";
+                StringEntity stringEntity = null;//param参数，可以为"key1=value1&key2=value2"的一串字符串
+                try {
+                    stringEntity = new StringEntity("bvid=" + bvInfo.getBvid() + "&like=1" + "&csrf=" + task.getAccounts().get(i).getBili_jct());
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                stringEntity.setContentType("application/x-www-form-urlencoded");
+                String c = "buvid2=" + task.getAccounts().get(i).getBuvid2() + ";";
+                c = c + "buvid3=" + task.getAccounts().get(i).getBuvid3() + ";";
+                c = c + "SESSDATA=" + task.getAccounts().get(i).getSessData() + ";";
+                logger.info("cookie: " + c);
+                BasicHeader cookie = new BasicHeader("cookie", c);
+//                BasicHeader cookie = new BasicHeader("cookie", "buvid2=" + task.getAccounts().get(i).getBuvid2() + ";buvid3=" + task.getAccounts().get(i).getBuvid3() + ";SESSDATA=" + task.getAccounts().get(i).getSessData());
+                JSONObject urlContent_post = httpClientDemo.getUrlContent_Post2(targetUrl, stringEntity, cookie);
+                logger.info(task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
+                Integer code = (Integer) urlContent_post.get("code");
+                logger.info("code:" + code);
+                bvInfo.setRequestNum(bvInfo.getRequestNum() + 1);
+                if (code == 0) {
+                    bvInfo.setSuccessNum(bvInfo.getSuccessNum() + 1);
+                }
+                upDataRequestNum(bvInfo.getId(), bvInfo.getRequestNum(), bvInfo.getSuccessNum());
                 try {
                     Thread.sleep(5000);
                 } catch (Exception e) {
@@ -108,10 +143,26 @@ public class AsyncServiceImpl implements AsyncService {
                 break;
             }
         }
-        logger.info("end executeAsync");
-        System.out.println("end executeAsync");
+        logger.info("end executeAsync like");
         threadInfo.releaseLikeThreadNum();
-        task.releaseLikeTask(bvid);
+        if (task.getLikeTask(bvInfo.getBvid()) != null) {
+            task.releaseLikeTask(bvInfo.getBvid(), 1);
+        }
+        Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
+        Integer like = bvViewAndLike.get("like");
+        if (like != null) {
+            upDateLike(bvInfo.getId(), like);
+        }
+        //判断是否已经完成任务
+        if ((bvInfo.getStartLikeNum() + bvInfo.getNeedLikeNum() <= like)) {
+            //完成任务
+            logger.info("完成点赞任务，当前数量：" + like);
+            task.updateLikeBVInfo(bvInfo.getId(), "完成");
+        } else if (task.getLikeTask(bvInfo.getBvid()) == null) {
+            //强制停止
+            logger.info("强制停止，当前数量：" + like);
+            task.updateLikeBVInfo(bvInfo.getId(), "停止");
+        }
     }
 
 
@@ -134,9 +185,28 @@ public class AsyncServiceImpl implements AsyncService {
     }
 
     void upDateView(String id, Integer view) {
-        for (int i = 0; i < task.getBVInfo().size(); i++) {
-            if (task.getBVInfo().get(i).getId().equals(id)) {
-                task.getBVInfo().get(i).setNowWatchNum(view);
+        for (int i = 0; i < task.getWatchBVInfo().size(); i++) {
+            if (task.getWatchBVInfo().get(i).getId().equals(id)) {
+                task.getWatchBVInfo().get(i).setNowWatchNum(view);
+                break;
+            }
+        }
+    }
+
+    void upDateLike(String id, Integer like) {
+        for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
+            if (task.getLikeBVInfo().get(i).getId().equals(id)) {
+                task.getLikeBVInfo().get(i).setNowLikeNum(like);
+                break;
+            }
+        }
+    }
+
+    void upDataRequestNum(String id, Integer requestNum, Integer successNum) {
+        for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
+            if (task.getLikeBVInfo().get(i).getId().equals(id)) {
+                task.getLikeBVInfo().get(i).setRequestNum(requestNum);
+                task.getLikeBVInfo().get(i).setSuccessNum(successNum);
                 break;
             }
         }

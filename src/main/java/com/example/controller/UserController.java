@@ -3,6 +3,7 @@ package com.example.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.example.config.Task;
 import com.example.config.ThreadInfo;
+import com.example.entity.Account;
 import com.example.entity.BVInfo;
 import com.example.entity.Proxy;
 import com.example.service.AsyncService;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
-
 
 
 @RestController
@@ -37,6 +37,7 @@ public class UserController {
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd HH:mm");
 
     @RequestMapping("/getBVInfo")
+    //查询视频信息
     public Object getBVInfo(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
         Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
@@ -69,22 +70,6 @@ public class UserController {
 //        }
 //    }
 
-    @RequestMapping("/getBVInfos")
-    public Object getBVInfos() {
-        List<String> bvids = new ArrayList<>();
-        bvids.add("BV1mM4y1G7S6");
-        bvids.add("BV1Yq4y1N7ir");
-        bvids.add("BV1B34y1Q7f7");
-        bvids.add("BV1Yq4y1Z7Rj");
-        List<Object> data = new ArrayList<>();
-        for (int i = 0; i < bvids.size(); i++) {
-            String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvids.get(i);
-            Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
-            data.add(urlContent_get);
-        }
-        return data;
-    }
-
     @RequestMapping("/startWatch")
     public Object startWatch(BVInfo bvInfo) {
         Integer watchTask = task.getWatchTask(bvInfo.getBvid());
@@ -92,7 +77,7 @@ public class UserController {
             Map<String, Object> map = new HashMap<>();
             map.put("code", 1);
             map.put("message", "已经存在一个相同任务");
-            map.put("bvInfos", getBVInfoList());
+            map.put("bvInfos", getWatchBVInfoList());
             return map;
         } else {
             bvInfo.setThreadNum(5);
@@ -104,7 +89,7 @@ public class UserController {
             if (threadInfo.getWatchThreadNum() - bvInfo.getThreadNum() >= 0) {
                 bvInfo.setStatus("运行");
                 System.out.println(bvInfo);
-                task.addBVInfo(bvInfo);
+                task.addWatchBVInfo(bvInfo);
                 threadInfo.subWatchThreadNum(bvInfo.getThreadNum());
                 task.setWatchTask(bvInfo.getBvid(), bvInfo.getThreadNum());
                 logger.info("start Watch");
@@ -116,13 +101,13 @@ public class UserController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", 0);
                 map.put("message", "提交播放任务成功");
-                map.put("bvInfos", getBVInfoList());
+                map.put("bvInfos", getWatchBVInfoList());
                 return map;
             } else {
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", 2);
                 map.put("message", "空闲线程数不足");
-                map.put("bvInfos", getBVInfoList());
+                map.put("bvInfos", getWatchBVInfoList());
                 return map;
             }
         }
@@ -133,11 +118,11 @@ public class UserController {
     public Object stopWatch(String id, String bvid) {
         logger.info("stop Watch");
         task.releaseWatchTask(bvid, 1000);
-        task.updateBVInfo(id,"停止");
+        task.updateWatchBVInfo(id, "停止");
         Map<String, Object> map = new HashMap<>();
         map.put("code", 0);
         map.put("message", "停止成功");
-        map.put("bvInfos", getBVInfoList());
+        map.put("bvInfos", getWatchBVInfoList());
         return map;
     }
 
@@ -148,14 +133,14 @@ public class UserController {
         Map<String, Object> map = new HashMap<>();
         map.put("code", "1");
         map.put("message", "移除失败");
-        map.put("bvInfos", getBVInfoList());
+        map.put("bvInfos", getWatchBVInfoList());
         if (watchTask == null) {
-            for (int i = 0; i < task.getBVInfo().size(); i++) {
-                if (id.equals(task.getBVInfo().get(i).getId())) {
-                    task.getBVInfo().remove(task.getBVInfo().get(i));
+            for (int i = 0; i < task.getWatchBVInfo().size(); i++) {
+                if (id.equals(task.getWatchBVInfo().get(i).getId())) {
+                    task.getWatchBVInfo().remove(task.getWatchBVInfo().get(i));
                     map.put("code", "0");
                     map.put("message", "移除成功");
-                    map.put("bvInfos", getBVInfoList());
+                    map.put("bvInfos", getWatchBVInfoList());
                     break;
                 }
             }
@@ -164,36 +149,82 @@ public class UserController {
     }
 
     @RequestMapping("/startLike")
-    public String startLike(String bvid, Integer num) {
-        if (threadInfo.getLikeThreadNum() - num >= 0) {
-            threadInfo.subLikeThreadNum(num);
-            task.setLikeTask(bvid, num);
-            logger.info("start Like");
-            //调用service层的任务
-            for (int i = 0; i < num; i++) {
-                asyncService.executeAsyncLike(bvid);
-            }
-            logger.info("end Like");
-            return "success_like";
+    public Object startLike(BVInfo bvInfo) {
+        Integer likeTask = task.getLikeTask(bvInfo.getBvid());
+        if (likeTask != null) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", 1);
+            map.put("message", "已经存在一个相同任务");
+            map.put("bvInfos", getLikeBVInfoList());
+            return map;
         } else {
-            return "error_like";
+            bvInfo.setThreadNum(1);
+            Long startTimeStamp = new Date().getTime();
+            String startTimeStr = simpleDateFormat.format(startTimeStamp);
+            bvInfo.setStartTimeStamp(startTimeStamp);
+            bvInfo.setStartTimeStr(startTimeStr);
+            bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
+            bvInfo.setRequestNum(0);
+            bvInfo.setSuccessNum(0);
+            if (threadInfo.getLikeThreadNum() - bvInfo.getThreadNum() >= 0) {
+                bvInfo.setStatus("运行");
+                System.out.println(bvInfo);
+                task.addLikeBVInfo(bvInfo);
+                threadInfo.subLikeThreadNum(bvInfo.getThreadNum());
+                task.setLikeTask(bvInfo.getBvid(), bvInfo.getThreadNum());
+                logger.info("start Like");
+                //调用service层的任务
+                for (int i = 0; i < bvInfo.getThreadNum(); i++) {
+                    asyncService.executeAsyncLike(bvInfo);
+                }
+                logger.info("end Like");
+                Map<String, Object> map = new HashMap<>();
+                map.put("code", 0);
+                map.put("message", "提交点赞任务成功");
+                map.put("bvInfos", getLikeBVInfoList());
+                return map;
+            } else {
+                Map<String, Object> map = new HashMap<>();
+                map.put("code", 2);
+                map.put("message", "空闲线程数不足");
+                map.put("bvInfos", getLikeBVInfoList());
+                return map;
+            }
         }
     }
 
     @RequestMapping("/stopLike")
-    public String stopLike(String bvid) {
+    public Object stopLike(String id, String bvid) {
         logger.info("stop Like");
-        task.setLikeTask(bvid, 0);
-        return "success";
+        task.releaseLikeTask(bvid, 1000);
+        task.updateLikeBVInfo(id, "停止");
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("message", "停止成功");
+        map.put("bvInfos", getLikeBVInfoList());
+        return map;
     }
 
-    @RequestMapping("/getThreadPoolInfo")
-    public Object getThreadPoolInfo() {
-        Map<String, Object> info = new HashMap<>();
-        info.put("WatchThreadNum", threadInfo.getWatchThreadNum());
-        info.put("LikeThreadNum", threadInfo.getLikeThreadNum());
-
-        return info;
+    @RequestMapping("/removeLike")
+    public Object removeLike(String id, String bvid) {
+        logger.info("remove Like");
+        Integer likeTask = task.getLikeTask(bvid);
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", "1");
+        map.put("message", "移除失败");
+        map.put("bvInfos", getLikeBVInfoList());
+        if (likeTask == null) {
+            for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
+                if (id.equals(task.getLikeBVInfo().get(i).getId())) {
+                    task.getLikeBVInfo().remove(task.getLikeBVInfo().get(i));
+                    map.put("code", "0");
+                    map.put("message", "移除成功");
+                    map.put("bvInfos", getLikeBVInfoList());
+                    break;
+                }
+            }
+        }
+        return map;
     }
 
     @RequestMapping("/getWatchTask")
@@ -206,9 +237,23 @@ public class UserController {
         return task.getLikeTask(id);
     }
 
-    @RequestMapping("/getBVInfoList")
-    public Object getBVInfoList() {
-        return task.getBVInfo();
+    @RequestMapping("/getWatchBVInfoList")
+    public Object getWatchBVInfoList() {
+        return task.getWatchBVInfo();
+    }
+
+    @RequestMapping("/getLikeBVInfoList")
+    public Object getLikeBVInfoList() {
+        return task.getLikeBVInfo();
+    }
+
+    @RequestMapping("/getThreadPoolInfo")
+    public Object getThreadPoolInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("WatchThreadNum", threadInfo.getWatchThreadNum());
+        info.put("LikeThreadNum", threadInfo.getLikeThreadNum());
+
+        return info;
     }
 
     @RequestMapping("/updateProxyInfo")
@@ -227,6 +272,41 @@ public class UserController {
         map.put("code", 0);
         map.put("message", "获取成功");
         map.put("data", httpClientDemo.getProxyInfo());
+        return map;
+    }
+
+
+    @RequestMapping("/addAccount")
+    public Object addAccount(Account account) {
+        task.addAccount(account);
+        Map<Object, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("message", "添加成功");
+        map.put("accountData", task.getAccounts());
+        return map;
+    }
+
+    @RequestMapping("/removeAccount")
+    public Object removeAccount(String dedeUserID) {
+        boolean b = task.removeAccount(dedeUserID);
+        Map<Object, Object> map = new HashMap<>();
+        if (b) {
+            map.put("code", 0);
+            map.put("message", "移除成功");
+        } else {
+            map.put("code", 1);
+            map.put("message", "移除失败");
+        }
+        map.put("accountData", task.getAccounts());
+        return map;
+    }
+
+    @RequestMapping("/getAccounts")
+    public Object getAccounts() {
+        Map<Object, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("message", "查询成功");
+        map.put("accountData", task.getAccounts());
         return map;
     }
 }

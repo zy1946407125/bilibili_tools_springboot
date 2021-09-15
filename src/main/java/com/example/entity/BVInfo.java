@@ -19,6 +19,8 @@ public class BVInfo {
     private String status;
     private Integer needWatchNum;
     private Integer needLikeNum;
+    private Integer requestNum;
+    private Integer successNum;
 
     public String getId() {
         return id;
@@ -156,6 +158,23 @@ public class BVInfo {
         this.endTimeStamp = endTimeStamp;
     }
 
+    public Integer getRequestNum() {
+        return requestNum;
+    }
+
+    public void setRequestNum(Integer requestNum) {
+        this.requestNum = requestNum;
+    }
+
+    public Integer getSuccessNum() {
+        return successNum;
+    }
+
+    public void setSuccessNum(Integer successNum) {
+        this.successNum = successNum;
+    }
+
+
     @Override
     public String toString() {
         return "BVInfo{" +
@@ -170,12 +189,14 @@ public class BVInfo {
                 ", startTimeStr='" + startTimeStr + '\'' +
                 ", startTimeStamp=" + startTimeStamp +
                 ", endTimeStr='" + endTimeStr + '\'' +
-                ", endTimeStamp='" + endTimeStamp + '\'' +
+                ", endTimeStamp=" + endTimeStamp +
                 ", threadNum=" + threadNum +
                 ", taskType='" + taskType + '\'' +
                 ", status='" + status + '\'' +
                 ", needWatchNum=" + needWatchNum +
                 ", needLikeNum=" + needLikeNum +
+                ", requestNum=" + requestNum +
+                ", successNum=" + successNum +
                 '}';
     }
 }
