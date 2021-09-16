@@ -5,6 +5,7 @@ import com.example.config.ExecutorConfig;
 import com.example.config.Task;
 import com.example.config.ThreadInfo;
 import com.example.entity.BVInfo;
+import com.example.entity.UserInfo;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.message.BasicHeader;
@@ -122,7 +123,7 @@ public class AsyncServiceImpl implements AsyncService {
                 String c = "buvid2=" + task.getAccounts().get(i).getBuvid2() + ";";
                 c = c + "buvid3=" + task.getAccounts().get(i).getBuvid3() + ";";
                 c = c + "SESSDATA=" + task.getAccounts().get(i).getSessData() + ";";
-                logger.info("cookie: " + c);
+//                logger.info("cookie: " + c);
                 BasicHeader cookie = new BasicHeader("cookie", c);
 //                BasicHeader cookie = new BasicHeader("cookie", "buvid2=" + task.getAccounts().get(i).getBuvid2() + ";buvid3=" + task.getAccounts().get(i).getBuvid3() + ";SESSDATA=" + task.getAccounts().get(i).getSessData());
                 JSONObject urlContent_post = httpClientDemo.getUrlContent_Post2(targetUrl, stringEntity, cookie);
@@ -130,10 +131,13 @@ public class AsyncServiceImpl implements AsyncService {
                 Integer code = (Integer) urlContent_post.get("code");
                 logger.info("code:" + code);
                 bvInfo.setRequestNum(bvInfo.getRequestNum() + 1);
+                boolean upSuccess = false;
                 if (code == 0) {
                     bvInfo.setSuccessNum(bvInfo.getSuccessNum() + 1);
+                    upSuccess = true;
                 }
                 upDataRequestNum(bvInfo.getId(), bvInfo.getRequestNum(), bvInfo.getSuccessNum());
+                task.upAccountLikeRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
                 try {
                     Thread.sleep(5000);
                 } catch (Exception e) {
@@ -166,6 +170,91 @@ public class AsyncServiceImpl implements AsyncService {
     }
 
 
+    @Override
+    @Async("asyncServiceFollow")
+    public void executeAsyncFollow(UserInfo userInfo) {
+        logger.info("start executeAsync follow");
+        Integer nowFollow = userInfo.getStartFollowNum();
+        Integer oldFollow = userInfo.getStartFollowNum();
+        Integer tmpFollow = userInfo.getStartFollowNum();
+        for (int i = 0; i < task.getAccounts().size(); i++) {
+            Map<String, Integer> userFans = getUserFans(userInfo.getMid());
+            tmpFollow = nowFollow;
+            nowFollow = userFans.get("fans");
+            oldFollow = userInfo.getStartFollowNum();
+            logger.info("当前关注数量：" + nowFollow);
+            if (nowFollow != null) {
+                if (oldFollow < nowFollow) {
+                    //更新当前关注数
+                    upDateFans(userInfo.getId(), nowFollow);
+                }
+            } else {
+                nowFollow = tmpFollow;
+            }
+            if (task.getFollowTask(userInfo.getMid()) != null && (userInfo.getStartFollowNum() + userInfo.getNeedFollowNum() > nowFollow)) {
+                String targetUrl = "https://api.bilibili.com/x/relation/modify";
+                StringEntity stringEntity = null;//param参数，可以为"key1=value1&key2=value2"的一串字符串
+                String str = "fid=" + userInfo.getMid();
+                str = str + "&act=" + "1";
+                str = str + "&re_src=" + "11";
+                str = str + "&jsonp=" + "jsonp";
+                str = str + "&csrf=" + task.getAccounts().get(i).getBili_jct();
+//                logger.info(str);
+                try {
+                    stringEntity = new StringEntity(str);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                stringEntity.setContentType("application/x-www-form-urlencoded");
+                String c = "buvid2=" + task.getAccounts().get(i).getBuvid2() + ";";
+                c = c + "buvid3=" + task.getAccounts().get(i).getBuvid3() + ";";
+                c = c + "SESSDATA=" + task.getAccounts().get(i).getSessData() + ";";
+//                logger.info("cookie: " + c);
+                BasicHeader cookie = new BasicHeader("cookie", c);
+                JSONObject urlContent_post = httpClientDemo.getUrlContent_Post2(targetUrl, stringEntity, cookie);
+                logger.info(task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
+                Integer code = (Integer) urlContent_post.get("code");
+                logger.info("code:" + code);
+                userInfo.setRequestNum(userInfo.getRequestNum() + 1);
+                boolean upSuccess = false;
+                if (code == 0) {
+                    userInfo.setSuccessNum(userInfo.getSuccessNum() + 1);
+                    upSuccess = true;
+                }
+                task.upAccountFollowRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
+                upDataRequestNumFollow(userInfo.getId(), userInfo.getRequestNum(), userInfo.getSuccessNum());
+                try {
+                    Thread.sleep(5000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                break;
+            }
+        }
+        logger.info("end executeAsync follow");
+        threadInfo.releaseFollowThreadNum();
+        if (task.getFollowTask(userInfo.getMid()) != null) {
+            task.releaseFollowTask(userInfo.getMid(), 1);
+        }
+        Map<String, Integer> userFans = getUserFans(userInfo.getMid());
+        Integer fans = userFans.get("fans");
+        if (fans != null) {
+            upDateFans(userInfo.getId(), fans);
+        }
+        //判断是否已经完成任务
+        if ((userInfo.getStartFollowNum() + userInfo.getNeedFollowNum() <= fans)) {
+            //完成任务
+            logger.info("完成关注任务，当前数量：" + fans);
+            task.updateFollowUserInfo(userInfo.getId(), "完成");
+        } else if (task.getFollowTask(userInfo.getMid()) == null) {
+            //强制停止
+            logger.info("强制停止，当前数量：" + fans);
+            task.updateFollowUserInfo(userInfo.getId(), "停止");
+        }
+    }
+
+
     Map<String, Integer> getBVViewAndLike(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
@@ -177,6 +266,22 @@ public class AsyncServiceImpl implements AsyncService {
             Integer like = (Integer) stat.get("like");
             map.put("view", view);
             map.put("like", like);
+            return map;
+        } catch (Exception e) {
+//            e.printStackTrace();
+            return map;
+        }
+    }
+
+    Map<String, Integer> getUserFans(String mid) {
+        String url = "https://api.bilibili.com/x/web-interface/card?mid=" + mid;
+        JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        Map<String, Integer> map = new HashMap<>();
+        try {
+            JSONObject data = (JSONObject) urlContent_get.get("data");
+            JSONObject card = (JSONObject) data.get("card");
+            Integer fans = (Integer) card.get("fans");
+            map.put("fans", fans);
             return map;
         } catch (Exception e) {
 //            e.printStackTrace();
@@ -202,11 +307,30 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
+    void upDateFans(String id, Integer fans) {
+        for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
+            if (task.getFollowUserInfos().get(i).getId().equals(id)) {
+                task.getFollowUserInfos().get(i).setNowFollowNum(fans);
+                break;
+            }
+        }
+    }
+
     void upDataRequestNum(String id, Integer requestNum, Integer successNum) {
         for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
             if (task.getLikeBVInfo().get(i).getId().equals(id)) {
                 task.getLikeBVInfo().get(i).setRequestNum(requestNum);
                 task.getLikeBVInfo().get(i).setSuccessNum(successNum);
+                break;
+            }
+        }
+    }
+
+    void upDataRequestNumFollow(String id, Integer requestNum, Integer successNum) {
+        for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
+            if (task.getFollowUserInfos().get(i).getId().equals(id)) {
+                task.getFollowUserInfos().get(i).setRequestNum(requestNum);
+                task.getFollowUserInfos().get(i).setSuccessNum(successNum);
                 break;
             }
         }

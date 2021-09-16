@@ -53,7 +53,7 @@ public class HttpClientDemo {
                 .setConnectTimeout(10000)
                 .setSocketTimeout(10000)
                 .setExpectContinueEnabled(false)
-                .setProxy(proxy)
+//                .setProxy(proxy)
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -83,7 +83,7 @@ public class HttpClientDemo {
                 .setConnectTimeout(10000)
                 .setSocketTimeout(10000)
                 .setExpectContinueEnabled(false)
-                .setProxy(proxy)
+//                .setProxy(proxy)
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -243,21 +243,24 @@ public class HttpClientDemo {
 
     public static void main(String[] args) throws Exception {
         // 要访问的目标页面
-//        String targetUrl = "http://httpbin.org/ip";
-//        String targetUrl = "https://api.bilibili.com/x/web-interface/view?bvid=BV12Z4y1F7bk";
-//        String targetUrl = "https://api.bilibili.com/x/report/click/h5";
-        String targetUrl = "https://api.bilibili.com/x/web-interface/archive/like";
-        StringEntity stringEntity = new StringEntity("bvid=BV1fK4y127Y6&csrf=ee47559073091d9f3810da664e71c6ff&like=1");//param参数，可以为"key1=value1&key2=value2"的一串字符串
-//        StringEntity stringEntity = new StringEntity("bvid=BV1wb4y197By&csrf=6dccf677a340c68f3379b1ddc076cefd&like=1");//param参数，可以为"key1=value1&key2=value2"的一串字符串
+        String targetUrl = "https://api.bilibili.com/x/relation/modify";
+
+        String str = "fid=" + "54076139";
+        str = str + "&act=" + "1";
+        str = str + "&re_src=" + "11";
+        str = str + "&jsonp=" + "jsonp";
+        str = str + "&csrf=" + "1982d8f7fadb10a2ae532edcc2c5589a";
+        System.out.println(str);
+        StringEntity stringEntity = new StringEntity(str);
         stringEntity.setContentType("application/x-www-form-urlencoded");
 
-//        CookieStore cookieStores = new BasicCookieStore();
-//        BasicClientCookie buvid2 = new BasicClientCookie("buvid2", "591A6386-913F-4FCF-B629-4D3FB3D8E8E1167629infoc");
-//        BasicClientCookie buvid3 = new BasicClientCookie("buvid3", "591A6386-913F-4FCF-B629-4D3FB3D8E8E1167629infoc");
-//        BasicClientCookie SESSDATA = new BasicClientCookie("SESSDATA", "dd6d5414%2C1646835922%2Cd2eaf%2A91");
-//        cookieStores.addCookie(buvid2);
-//        cookieStores.addCookie(buvid3);
-//        cookieStores.addCookie(SESSDATA);
-//        new HttpClientDemo().getUrlContent_Post2(targetUrl, stringEntity);
+        String c = "buvid2=" + "F2FF6966-3F7B-474E-BAFD-F00AABCAA61C167616infoc" + ";";
+        c = c + "buvid3=" + "F2FF6966-3F7B-474E-BAFD-F00AABCAA61C167616infoc" + ";";
+        c = c + "SESSDATA=" + "23be4337%2C1646835674%2C1f988%2A91" + ";";
+        System.out.println("cookie: " + c);
+        BasicHeader cookie = new BasicHeader("cookie", c);
+
+        JSONObject urlContent_post2 = new HttpClientDemo().getUrlContent_Post2(targetUrl, stringEntity, cookie);
+        System.out.println(urlContent_post2);
     }
 }

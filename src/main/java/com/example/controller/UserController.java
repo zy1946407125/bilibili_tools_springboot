@@ -6,6 +6,7 @@ import com.example.config.ThreadInfo;
 import com.example.entity.Account;
 import com.example.entity.BVInfo;
 import com.example.entity.Proxy;
+import com.example.entity.UserInfo;
 import com.example.service.AsyncService;
 import com.example.service.HttpClientDemo;
 import org.slf4j.Logger;
@@ -43,10 +44,28 @@ public class UserController {
         Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
         int watchThreadNum = threadInfo.getWatchThreadNum();
         int likeThreadNum = threadInfo.getLikeThreadNum();
+        int followThreadNum = threadInfo.getFollowThreadNum();
         Map<String, Object> map = new HashMap<>();
         map.put("bvinfo", urlContent_get);
         map.put("watchThreadNum", watchThreadNum);
         map.put("likeThreadNum", likeThreadNum);
+        map.put("followThreadNum", followThreadNum);
+        return map;
+    }
+
+    @RequestMapping("/getUserInfo")
+    //查询用户信息
+    public Object getUserInfo(String mid) {
+        String url = "https://api.bilibili.com/x/web-interface/card?mid=" + mid;
+        Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        int watchThreadNum = threadInfo.getWatchThreadNum();
+        int likeThreadNum = threadInfo.getLikeThreadNum();
+        int followThreadNum = threadInfo.getFollowThreadNum();
+        Map<String, Object> map = new HashMap<>();
+        map.put("userInfo", urlContent_get);
+        map.put("watchThreadNum", watchThreadNum);
+        map.put("likeThreadNum", likeThreadNum);
+        map.put("followThreadNum", followThreadNum);
         return map;
     }
 
@@ -148,6 +167,17 @@ public class UserController {
         return map;
     }
 
+    @RequestMapping("/getWatchTask")
+    public Object getWatchTask(String id) {
+        return task.getWatchTask(id);
+    }
+
+    @RequestMapping("/getWatchBVInfoList")
+    public Object getWatchBVInfoList() {
+        return task.getWatchBVInfo();
+    }
+
+
     @RequestMapping("/startLike")
     public Object startLike(BVInfo bvInfo) {
         Integer likeTask = task.getLikeTask(bvInfo.getBvid());
@@ -227,19 +257,9 @@ public class UserController {
         return map;
     }
 
-    @RequestMapping("/getWatchTask")
-    public Object getWatchTask(String id) {
-        return task.getWatchTask(id);
-    }
-
     @RequestMapping("/getLikeTask")
     public Object getLikeTask(String id) {
         return task.getLikeTask(id);
-    }
-
-    @RequestMapping("/getWatchBVInfoList")
-    public Object getWatchBVInfoList() {
-        return task.getWatchBVInfo();
     }
 
     @RequestMapping("/getLikeBVInfoList")
@@ -247,11 +267,103 @@ public class UserController {
         return task.getLikeBVInfo();
     }
 
+
+    @RequestMapping("/startFollow")
+    public Object startFollow(UserInfo userInfo) {
+        Integer followTask = task.getFollowTask(userInfo.getMid());
+        if (followTask != null) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", 1);
+            map.put("message", "已经存在一个相同任务");
+            map.put("userInfos", getFollowUserInfoList());
+            return map;
+        } else {
+            userInfo.setThreadNum(1);
+            Long startTimeStamp = new Date().getTime();
+            String startTimeStr = simpleDateFormat.format(startTimeStamp);
+            userInfo.setStartTimeStamp(startTimeStamp);
+            userInfo.setStartTimeStr(startTimeStr);
+            userInfo.setId(userInfo.getMid() + "_" + userInfo.getStartTimeStamp());
+            userInfo.setRequestNum(0);
+            userInfo.setSuccessNum(0);
+            if (threadInfo.getFollowThreadNum() - userInfo.getThreadNum() >= 0) {
+                userInfo.setStatus("运行");
+                System.out.println(userInfo);
+                task.addFollowUserInfo(userInfo);
+                threadInfo.subFollowThreadNum(userInfo.getThreadNum());
+                task.setFollowTask(userInfo.getMid(), userInfo.getThreadNum());
+                logger.info("start Follow");
+                //调用service层的任务
+                for (int i = 0; i < userInfo.getThreadNum(); i++) {
+                    asyncService.executeAsyncFollow(userInfo);
+                }
+                logger.info("end Follow");
+                Map<String, Object> map = new HashMap<>();
+                map.put("code", 0);
+                map.put("message", "提交关注任务成功");
+                map.put("userInfos", getFollowUserInfoList());
+                return map;
+            } else {
+                Map<String, Object> map = new HashMap<>();
+                map.put("code", 2);
+                map.put("message", "空闲线程数不足");
+                map.put("userInfos", getFollowUserInfoList());
+                return map;
+            }
+        }
+    }
+
+    @RequestMapping("/stopFollow")
+    public Object stopFollow(String id, String mid) {
+        logger.info("stop Follow");
+        task.releaseFollowTask(mid, 1000);
+        task.updateFollowUserInfo(id, "停止");
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("message", "停止成功");
+        map.put("userInfos", getFollowUserInfoList());
+        return map;
+    }
+
+    @RequestMapping("/removeFollow")
+    public Object removeFollow(String id, String mid) {
+        logger.info("remove Follow");
+        Integer followTask = task.getFollowTask(mid);
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", "1");
+        map.put("message", "移除失败");
+        map.put("userInfos", getFollowUserInfoList());
+        if (followTask == null) {
+            for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
+                if (id.equals(task.getFollowUserInfos().get(i).getId())) {
+                    task.getFollowUserInfos().remove(task.getFollowUserInfos().get(i));
+                    map.put("code", "0");
+                    map.put("message", "移除成功");
+                    map.put("userInfos", getFollowUserInfoList());
+                    break;
+                }
+            }
+        }
+        return map;
+    }
+
+    @RequestMapping("/getFollowTask")
+    public Object getFollowTask(String mid) {
+        return task.getFollowTask(mid);
+    }
+
+    @RequestMapping("/getFollowUserInfoList")
+    public Object getFollowUserInfoList() {
+        return task.getFollowUserInfos();
+    }
+
+
     @RequestMapping("/getThreadPoolInfo")
     public Object getThreadPoolInfo() {
         Map<String, Object> info = new HashMap<>();
         info.put("WatchThreadNum", threadInfo.getWatchThreadNum());
         info.put("LikeThreadNum", threadInfo.getLikeThreadNum());
+        info.put("FollowThreadNum", threadInfo.getFollowThreadNum());
 
         return info;
     }

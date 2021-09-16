@@ -2,6 +2,7 @@ package com.example.config;
 
 import com.example.entity.Account;
 import com.example.entity.BVInfo;
+import com.example.entity.UserInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -10,11 +11,13 @@ public class Task {
     private static Task task = new Task();
     private Map<String, Integer> watchTask = new HashMap<String, Integer>();
     private Map<String, Integer> likeTask = new HashMap<String, Integer>();
+    private Map<String, Integer> followTask = new HashMap<String, Integer>();
 
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd HH:mm");
 
     private List<BVInfo> watchBVInfos = new ArrayList<>();
     private List<BVInfo> likeBVInfos = new ArrayList<>();
+    private List<UserInfo> followUserInfos = new ArrayList<>();
 
     private List<Account> accounts = new ArrayList<>();
 
@@ -138,6 +141,43 @@ public class Task {
     }
 
 
+    public synchronized void setFollowTask(String mid, Integer num) {
+        this.followTask.put(mid, num);
+    }
+
+    public synchronized Integer getFollowTask(String mid) {
+        return this.followTask.get(mid);
+    }
+
+    public synchronized void releaseFollowTask(String mid, int num) {
+        this.followTask.put(mid, this.followTask.get(mid) - num);
+        if (this.followTask.get(mid) <= 0) {
+            this.followTask.remove(mid);
+        }
+    }
+
+    public synchronized void addFollowUserInfo(UserInfo userInfo) {
+        this.followUserInfos.add(userInfo);
+    }
+
+    public synchronized List<UserInfo> getFollowUserInfos() {
+        return this.followUserInfos;
+    }
+
+    public synchronized void updateFollowUserInfo(String id, String status) {
+        for (int i = 0; i < followUserInfos.size(); i++) {
+            if (followUserInfos.get(i).getId().equals(id)) {
+                Long endTimeStamp = new Date().getTime();
+                String endTimeStr = simpleDateFormat.format(endTimeStamp);
+                followUserInfos.get(i).setEndTimeStamp(endTimeStamp);
+                followUserInfos.get(i).setEndTimeStr(endTimeStr);
+                followUserInfos.get(i).setStatus(status);
+                break;
+            }
+        }
+    }
+
+
     public List<Account> getAccounts() {
         return accounts;
     }
@@ -156,4 +196,25 @@ public class Task {
         return false;
     }
 
+    public synchronized void upAccountLikeRequestAndSuccess(String dedeUserID, boolean upSuccess) {
+        for (int i = 0; i < task.getAccounts().size(); i++) {
+            if (task.getAccounts().get(i).getDedeUserID().equals(dedeUserID)) {
+                task.getAccounts().get(i).setLikeRequestNum(task.getAccounts().get(i).getLikeRequestNum() + 1);
+                if (upSuccess) {
+                    task.getAccounts().get(i).setLikeSuccessNum(task.getAccounts().get(i).getLikeSuccessNum() + 1);
+                }
+            }
+        }
+    }
+
+    public synchronized void upAccountFollowRequestAndSuccess(String dedeUserID, boolean upSuccess) {
+        for (int i = 0; i < task.getAccounts().size(); i++) {
+            if (task.getAccounts().get(i).getDedeUserID().equals(dedeUserID)) {
+                task.getAccounts().get(i).setFollowRequestNum(task.getAccounts().get(i).getFollowRequestNum() + 1);
+                if (upSuccess) {
+                    task.getAccounts().get(i).setFollowSuccessNum(task.getAccounts().get(i).getFollowSuccessNum() + 1);
+                }
+            }
+        }
+    }
 }
