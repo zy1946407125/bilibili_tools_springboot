@@ -1,11 +1,5 @@
 package com.example.entity;
 
-/**
- * ClassName: GoodsIDAndKey
- * Description:
- * date: 2021/9/19 20:36
- * author: zouyuan
- */
 public class GoodsIDAndKey {
 
     private String key;
