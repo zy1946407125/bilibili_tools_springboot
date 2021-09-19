@@ -61,7 +61,7 @@ public class UserController {
 
     @RequestMapping("/getUserInfo")
     //查询用户信息
-    public Object getUserInfo(String mid) {
+    public Map<String, Object> getUserInfo(String mid) {
         String url = "https://api.bilibili.com/x/web-interface/card?mid=" + mid;
         Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
         int watchThreadNum = threadInfo.getWatchThreadNum();
@@ -188,7 +188,7 @@ public class UserController {
 
 
     @RequestMapping("/startLike")
-    public Object startLike(BVInfo bvInfo) {
+    public Map<String, Object> startLike(BVInfo bvInfo) {
         Integer likeTask = task.getLikeTask(bvInfo.getBvid());
         if (likeTask != null) {
             Map<String, Object> map = new HashMap<>();
@@ -202,7 +202,10 @@ public class UserController {
             String startTimeStr = simpleDateFormat.format(startTimeStamp);
             bvInfo.setStartTimeStamp(startTimeStamp);
             bvInfo.setStartTimeStr(startTimeStr);
-            bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
+            if (bvInfo.getId() == null) {
+                System.out.println("id为空");
+                bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
+            }
             bvInfo.setRequestNum(0);
             bvInfo.setSuccessNum(0);
             if (threadInfo.getLikeThreadNum() - bvInfo.getThreadNum() >= 0) {
@@ -278,7 +281,7 @@ public class UserController {
 
 
     @RequestMapping("/startFollow")
-    public Object startFollow(UserInfo userInfo) {
+    public Map<String, Object> startFollow(UserInfo userInfo) {
         Integer followTask = task.getFollowTask(userInfo.getMid());
         if (followTask != null) {
             Map<String, Object> map = new HashMap<>();
@@ -292,7 +295,10 @@ public class UserController {
             String startTimeStr = simpleDateFormat.format(startTimeStamp);
             userInfo.setStartTimeStamp(startTimeStamp);
             userInfo.setStartTimeStr(startTimeStr);
-            userInfo.setId(userInfo.getMid() + "_" + userInfo.getStartTimeStamp());
+            if (userInfo.getId() == null) {
+                System.out.println("id为空");
+                userInfo.setId(userInfo.getMid() + "_" + userInfo.getStartTimeStamp());
+            }
             userInfo.setRequestNum(0);
             userInfo.setSuccessNum(0);
             if (threadInfo.getFollowThreadNum() - userInfo.getThreadNum() >= 0) {
@@ -431,77 +437,39 @@ public class UserController {
         return map;
     }
 
+    @RequestMapping("/getAllGoodsIDAndKey")
+    public Object getAllGoodsIDAndKey() {
+        List<GoodsIDAndKey> list = new ArrayList<>();
+        GoodsIDAndKey watch = task.getGoodsIDAndKey("watch");
+        watch.setKey("watch");
+        GoodsIDAndKey like = task.getGoodsIDAndKey("like");
+        like.setKey("like");
+        GoodsIDAndKey follow = task.getGoodsIDAndKey("follow");
+        follow.setKey("follow");
+        list.add(watch);
+        list.add(like);
+        list.add(follow);
 
-//    @PostConstruct
-    //继续状态为进行中的订单
-    //避免意外停止 状态丢失
-    public void continueJXZWatchOrder() {
-        System.err.println("获取进行中播放订单: " + LocalDateTime.now());
-        String url = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=601&state=jxz&format=json&apikey=h8M6KeYvfvnvaw3g";
-        String watchOrder_json = httpClientDemo.getUrlContent_Get_JSON(url);
-        List<Order> orders = JSON.parseArray(JSON.parseObject(watchOrder_json).getString("rows"), Order.class);
-        if (orders != null) {
-            for (Order order : orders) {
-                String BV = order.getAa();
-                String id = order.getId();
-                String startNum = order.getStart_num();
-                Integer needNum = Integer.valueOf(order.getNeed_num_0());
-                //查询视频信息，检查BV是否正确，获取当前播放量
-                Map<String, Object> map = getBVInfo(BV);
-                JSONObject bvinfoJSONObject = (JSONObject) map.get("bvinfo");
-                Integer code = (Integer) bvinfoJSONObject.get("code");
-                //视频BV号正确
-                if (code == 0) {
-                    BVInfo bvInfo = new BVInfo();
-                    JSONObject data = (JSONObject) bvinfoJSONObject.get("data");
-                    String bvid = data.getString("bvid");
-                    String title = data.getString("title");
-                    JSONObject owner = data.getJSONObject("owner");
-                    String name = owner.getString("name");
-                    JSONObject stat = data.getJSONObject("stat");
-                    Integer view = stat.getInteger("view");
-
-                    bvInfo.setId(id);
-                    bvInfo.setBvid(bvid);
-                    bvInfo.setTitle(title);
-                    bvInfo.setAuthor(name);
-                    bvInfo.setNowWatchNum(view);
-                    bvInfo.setStartWatchNum(Integer.valueOf(startNum));
-                    bvInfo.setNeedWatchNum(needNum);
-                    bvInfo.setTaskType("播放");
-
-                    Map<String, Object> mapStartWatch = startWatch(bvInfo);
-                    Integer codeWatch = (Integer) mapStartWatch.get("code");
-                    if (codeWatch == 0) {
-                        Boolean status = orderService.orderSetJXZ("601", bvInfo.getId(), bvInfo.getStartWatchNum(), bvInfo.getNowWatchNum());
-                        if (status) {
-                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《进行中》状态成功");
-                        } else {
-                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《进行中》状态失败");
-                        }
-                    } else {
-                        System.out.println("线程数不足或已存在相同BV号视频");
-                        Boolean status = orderService.orderSetWKS("601", bvInfo.getId(), bvInfo.getStartWatchNum(), bvInfo.getNowWatchNum());
-                        if (status) {
-                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《未开始》状态成功");
-                        } else {
-                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《未开始》状态失败");
-                        }
-                    }
-
-                } else {
-                    //视频BV号不正确，进行退单
-                    System.out.println("设置订单退单");
-                    Boolean status = orderService.orderReturn(id);
-                    if (status) {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
-                }
-            }
-        } else {
-            System.out.println("暂无进行中订单");
-        }
+        return list;
     }
+
+    @RequestMapping("/setGoodsIDAndKey")
+    public Object setGoodsIDAndKey(String key, String goodsId, String apikey) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", 1);
+        map.put("message", "更新失败");
+        map.put("data", getAllGoodsIDAndKey());
+        GoodsIDAndKey goodsIDAndKey = new GoodsIDAndKey();
+        goodsIDAndKey.setKey(key);
+        goodsIDAndKey.setGoodsId(goodsId);
+        goodsIDAndKey.setApikey(apikey);
+        if (goodsIDAndKey.getGoodsId() != null && goodsIDAndKey.getApikey() != null && !"".equals(goodsIDAndKey.getGoodsId()) && !"".equals(goodsIDAndKey.getApikey())) {
+            task.setGoodsIDAndKey(goodsIDAndKey);
+            map.put("code", 0);
+            map.put("message", "更新成功");
+            map.put("data", getAllGoodsIDAndKey());
+        }
+        return map;
+    }
+
 }

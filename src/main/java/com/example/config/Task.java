@@ -2,6 +2,7 @@ package com.example.config;
 
 import com.example.entity.Account;
 import com.example.entity.BVInfo;
+import com.example.entity.GoodsIDAndKey;
 import com.example.entity.UserInfo;
 
 import java.text.SimpleDateFormat;
@@ -20,6 +21,14 @@ public class Task {
     private List<UserInfo> followUserInfos = new ArrayList<>();
 
     private List<Account> accounts = new ArrayList<>();
+
+    private static Map<String, GoodsIDAndKey> allGoodsIDAndKey = new HashMap<String, GoodsIDAndKey>();
+
+    static {
+        allGoodsIDAndKey.put("watch", new GoodsIDAndKey("601", "h8M6KeYvfvnvaw3g"));
+        allGoodsIDAndKey.put("like", new GoodsIDAndKey("602", "NRnXaGXCKid0YPCI"));
+        allGoodsIDAndKey.put("follow", new GoodsIDAndKey("603", "tZAzydLIS6p9eJUq"));
+    }
 
     private Task() {
         Account account1 = new Account();
@@ -228,11 +237,59 @@ public class Task {
                     //不能退单
                     return true;
                 } else {
-                    //需要退单
+                    //可以退单
                     return false;
                 }
             }
         }
         return false;
+    }
+
+    //判断是否是相同任务
+    public synchronized boolean likeReturnFlag(String id, String bvid) {
+        for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
+            //找出与bvid相同的并且运行中的播放任务
+            if (task.getLikeBVInfo().get(i).getBvid().equals(bvid) && task.getLikeBVInfo().get(i).getStatus().equals("运行")) {
+                //判断是否该任务是否为id
+                if (task.getLikeBVInfo().get(i).getId().equals(id)) {
+                    //不能退单
+                    return true;
+                } else {
+                    //可以退单
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    //判断是否是相同任务
+    public synchronized boolean followReturnFlag(String id, String mid) {
+        for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
+            //找出与mid相同的并且运行中的关注任务
+            if (task.getFollowUserInfos().get(i).getMid().equals(mid) && task.getFollowUserInfos().get(i).getStatus().equals("运行")) {
+                //判断是否该任务是否为id
+                if (task.getFollowUserInfos().get(i).getId().equals(id)) {
+                    //不能退单
+                    return true;
+                } else {
+                    //可以退单
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Map getAllGoodsIDAndKey() {
+        return allGoodsIDAndKey;
+    }
+
+    public GoodsIDAndKey getGoodsIDAndKey(String key) {
+        return allGoodsIDAndKey.get(key);
+    }
+
+    public void setGoodsIDAndKey(GoodsIDAndKey goodsIDAndKey) {
+        allGoodsIDAndKey.put(goodsIDAndKey.getKey(), goodsIDAndKey);
     }
 }
