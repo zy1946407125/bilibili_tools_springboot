@@ -53,7 +53,7 @@ public class HttpClientDemo {
                 .setConnectTimeout(10000)
                 .setSocketTimeout(10000)
                 .setExpectContinueEnabled(false)
-//                .setProxy(proxy)
+                .setProxy(proxy)
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -83,7 +83,7 @@ public class HttpClientDemo {
                 .setConnectTimeout(10000)
                 .setSocketTimeout(10000)
                 .setExpectContinueEnabled(false)
-//                .setProxy(proxy)
+                .setProxy(proxy)
                 .setCookieSpec(CookieSpecs.STANDARD)
                 .build();
 
@@ -141,6 +141,47 @@ public class HttpClientDemo {
             }
         }
         return jsonObject;
+    }
+
+
+    public String getUrlContent_Get_JSON(String url) {
+        HttpGet httpGet = new HttpGet(url);
+        httpGet.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+        httpGet.addHeader("Accept-Encoding", "gzip, deflate");
+        httpGet.addHeader("Accept-Language", "zh-CN,zh;q=0.9");
+        httpGet.addHeader("Cache-Control", "max-age=0");
+        httpGet.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
+        CloseableHttpResponse httpResp = null;
+
+        String html = null;
+
+        try {
+            // JDK 8u111版本后，目标页面为HTTPS协议，启用proxy用户密码鉴权
+            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+
+            AuthCache authCache = new BasicAuthCache();
+            authCache.put(proxy, new BasicScheme());
+
+            HttpClientContext localContext = HttpClientContext.create();
+            localContext.setAuthCache(authCache);
+
+            httpResp = clientBuilder.build().execute(httpGet, localContext);
+
+            html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
+//            System.out.println(html);
+//            System.out.println(jsonObject);
+        } catch (Exception e) {
+//            e.printStackTrace();
+        } finally {
+            try {
+                if (httpResp != null) {
+                    httpResp.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return html;
     }
 
     public Object getUrlContent_Post(String url, StringEntity stringEntity) {

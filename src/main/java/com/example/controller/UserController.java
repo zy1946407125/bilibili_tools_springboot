@@ -1,33 +1,39 @@
 package com.example.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.example.config.Task;
 import com.example.config.ThreadInfo;
-import com.example.entity.Account;
-import com.example.entity.BVInfo;
-import com.example.entity.Proxy;
-import com.example.entity.UserInfo;
+import com.example.entity.*;
 import com.example.service.AsyncService;
 import com.example.service.HttpClientDemo;
+import com.example.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 
 
 @RestController
+@Service
 public class UserController {
     @Autowired
     private HttpClientDemo httpClientDemo;
 
     @Autowired
     private AsyncService asyncService;
+
+    @Autowired
+    private OrderService orderService;
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -39,7 +45,7 @@ public class UserController {
 
     @RequestMapping("/getBVInfo")
     //查询视频信息
-    public Object getBVInfo(String bvid) {
+    public Map<String, Object> getBVInfo(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
         Object urlContent_get = httpClientDemo.getUrlContent_Get(url);
         int watchThreadNum = threadInfo.getWatchThreadNum();
@@ -90,7 +96,7 @@ public class UserController {
 //    }
 
     @RequestMapping("/startWatch")
-    public Object startWatch(BVInfo bvInfo) {
+    public Map<String, Object> startWatch(BVInfo bvInfo) {
         Integer watchTask = task.getWatchTask(bvInfo.getBvid());
         if (watchTask != null) {
             Map<String, Object> map = new HashMap<>();
@@ -104,7 +110,10 @@ public class UserController {
             String startTimeStr = simpleDateFormat.format(startTimeStamp);
             bvInfo.setStartTimeStamp(startTimeStamp);
             bvInfo.setStartTimeStr(startTimeStr);
-            bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
+            if (bvInfo.getId() == null) {
+                System.out.println("id为空");
+                bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
+            }
             if (threadInfo.getWatchThreadNum() - bvInfo.getThreadNum() >= 0) {
                 bvInfo.setStatus("运行");
                 System.out.println(bvInfo);
@@ -420,5 +429,79 @@ public class UserController {
         map.put("message", "查询成功");
         map.put("accountData", task.getAccounts());
         return map;
+    }
+
+
+//    @PostConstruct
+    //继续状态为进行中的订单
+    //避免意外停止 状态丢失
+    public void continueJXZWatchOrder() {
+        System.err.println("获取进行中播放订单: " + LocalDateTime.now());
+        String url = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=601&state=jxz&format=json&apikey=h8M6KeYvfvnvaw3g";
+        String watchOrder_json = httpClientDemo.getUrlContent_Get_JSON(url);
+        List<Order> orders = JSON.parseArray(JSON.parseObject(watchOrder_json).getString("rows"), Order.class);
+        if (orders != null) {
+            for (Order order : orders) {
+                String BV = order.getAa();
+                String id = order.getId();
+                String startNum = order.getStart_num();
+                Integer needNum = Integer.valueOf(order.getNeed_num_0());
+                //查询视频信息，检查BV是否正确，获取当前播放量
+                Map<String, Object> map = getBVInfo(BV);
+                JSONObject bvinfoJSONObject = (JSONObject) map.get("bvinfo");
+                Integer code = (Integer) bvinfoJSONObject.get("code");
+                //视频BV号正确
+                if (code == 0) {
+                    BVInfo bvInfo = new BVInfo();
+                    JSONObject data = (JSONObject) bvinfoJSONObject.get("data");
+                    String bvid = data.getString("bvid");
+                    String title = data.getString("title");
+                    JSONObject owner = data.getJSONObject("owner");
+                    String name = owner.getString("name");
+                    JSONObject stat = data.getJSONObject("stat");
+                    Integer view = stat.getInteger("view");
+
+                    bvInfo.setId(id);
+                    bvInfo.setBvid(bvid);
+                    bvInfo.setTitle(title);
+                    bvInfo.setAuthor(name);
+                    bvInfo.setNowWatchNum(view);
+                    bvInfo.setStartWatchNum(Integer.valueOf(startNum));
+                    bvInfo.setNeedWatchNum(needNum);
+                    bvInfo.setTaskType("播放");
+
+                    Map<String, Object> mapStartWatch = startWatch(bvInfo);
+                    Integer codeWatch = (Integer) mapStartWatch.get("code");
+                    if (codeWatch == 0) {
+                        Boolean status = orderService.orderSetJXZ("601", bvInfo.getId(), bvInfo.getStartWatchNum(), bvInfo.getNowWatchNum());
+                        if (status) {
+                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《进行中》状态成功");
+                        } else {
+                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《进行中》状态失败");
+                        }
+                    } else {
+                        System.out.println("线程数不足或已存在相同BV号视频");
+                        Boolean status = orderService.orderSetWKS("601", bvInfo.getId(), bvInfo.getStartWatchNum(), bvInfo.getNowWatchNum());
+                        if (status) {
+                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《未开始》状态成功");
+                        } else {
+                            System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《未开始》状态失败");
+                        }
+                    }
+
+                } else {
+                    //视频BV号不正确，进行退单
+                    System.out.println("设置订单退单");
+                    Boolean status = orderService.orderReturn(id);
+                    if (status) {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
+                }
+            }
+        } else {
+            System.out.println("暂无进行中订单");
+        }
     }
 }

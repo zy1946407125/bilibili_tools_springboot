@@ -217,4 +217,22 @@ public class Task {
             }
         }
     }
+
+    //判断是否是相同任务
+    public synchronized boolean watchReturnFlag(String id, String bvid) {
+        for (int i = 0; i < task.getWatchBVInfo().size(); i++) {
+            //找出与bvid相同的并且运行中的播放任务
+            if (task.getWatchBVInfo().get(i).getBvid().equals(bvid) && task.getWatchBVInfo().get(i).getStatus().equals("运行")) {
+                //判断是否该任务是否为id
+                if (task.getWatchBVInfo().get(i).getId().equals(id)) {
+                    //不能退单
+                    return true;
+                } else {
+                    //需要退单
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
 }

@@ -12,4 +12,8 @@ public interface AsyncService {
     void executeAsyncLike(BVInfo bvInfo);
 
     void executeAsyncFollow(UserInfo userInfo);
+
+    Map<String, Integer> getBVViewAndLike(String bvid);
+
+    public Map<String, Integer> getUserFans(String mid);
 }

@@ -7,9 +7,9 @@ import java.util.Map;
 public class ThreadInfo {
 
     private static ThreadInfo threadInfo = new ThreadInfo();
-    private int watchThreadNum = 25;
-    private int likeThreadNum = 5;
-    private int followThreadNum = 5;
+    private int watchThreadNum = 100;
+    private int likeThreadNum = 20;
+    private int followThreadNum = 20;
 
     private ThreadInfo() {
     }

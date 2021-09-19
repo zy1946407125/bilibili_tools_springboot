@@ -29,6 +29,8 @@ public class AsyncServiceImpl implements AsyncService {
 
     @Autowired
     private HttpClientDemo httpClientDemo;
+    @Autowired
+    private OrderService orderService;
 
     @Override
     @Async("asyncServiceWatch")
@@ -47,6 +49,14 @@ public class AsyncServiceImpl implements AsyncService {
                 if (oldView < nowView) {
                     //更新当前播放数
                     upDateView(bvInfo.getId(), nowView);
+                    if (bvInfo.getId().length() < 12) {
+                        Boolean status = orderService.orderSetJXZ("601", bvInfo.getId(), bvInfo.getStartWatchNum(), nowView);
+                        if (status) {
+                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数成功");
+                        } else {
+                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数失败");
+                        }
+                    }
                 }
             } else {
                 nowView = tmpView;
@@ -83,10 +93,26 @@ public class AsyncServiceImpl implements AsyncService {
             //完成任务
             logger.info("完成播放任务，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "完成");
+            if (bvInfo.getId().length() < 12) {
+                Boolean status = orderService.orderSetYWC("601", bvInfo.getId(), bvInfo.getStartWatchNum(), view);
+                if (status) {
+                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                } else {
+                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                }
+            }
         } else if (task.getWatchTask(bvInfo.getBvid()) == null) {
             //强制停止
             logger.info("强制停止，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "停止");
+            if (bvInfo.getId().length() < 12) {
+                Boolean status = orderService.orderReturn(bvInfo.getId());
+                if (status) {
+                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
+                } else {
+                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
+                }
+            }
         }
     }
 
@@ -255,7 +281,8 @@ public class AsyncServiceImpl implements AsyncService {
     }
 
 
-    Map<String, Integer> getBVViewAndLike(String bvid) {
+    @Override
+    public Map<String, Integer> getBVViewAndLike(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
         Map<String, Integer> map = new HashMap<>();
@@ -273,7 +300,8 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    Map<String, Integer> getUserFans(String mid) {
+    @Override
+    public Map<String, Integer> getUserFans(String mid) {
         String url = "https://api.bilibili.com/x/web-interface/card?mid=" + mid;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
         Map<String, Integer> map = new HashMap<>();
