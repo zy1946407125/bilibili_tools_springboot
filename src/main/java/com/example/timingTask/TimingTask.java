@@ -37,7 +37,7 @@ public class TimingTask {
 
     private Task task = Task.getTask();
 
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(fixedRate = 30000)
     private void getWatch() {
         System.err.println("获取进行中播放订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("watch").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("watch").getApikey();
@@ -231,7 +231,7 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(fixedRate = 30000)
     private void getLike() {
         System.err.println("获取进行中点赞订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("like").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("like").getApikey();
@@ -425,7 +425,7 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 120000)
+    @Scheduled(fixedRate = 30000)
     private void getFollow() {
         System.err.println("获取进行中关注订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("follow").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("follow").getApikey();
@@ -606,6 +606,111 @@ public class TimingTask {
             }
         } else {
             System.out.println("暂无未开始关注订单");
+        }
+    }
+
+
+    @Scheduled(fixedRate = 10000)
+    public void handleWatchReturn() {
+        System.err.println("获取退单中播放订单: " + LocalDateTime.now());
+        String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("watch").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("watch").getApikey();
+        String watchTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        List<Order> ordersTDZ = null;
+        try {
+            ordersTDZ = JSON.parseArray(JSON.parseObject(watchTDZOrder_json).getString("rows"), Order.class);
+        } catch (Exception e) {
+            System.out.println("获取退单中播放订单出错");
+        }
+        if (ordersTDZ != null) {
+            for (Order order : ordersTDZ) {
+                String bvid = order.getAa();
+                String id = order.getId();
+                Integer watchTask = task.getWatchTask(bvid);
+                if (watchTask == null) {
+                    //订单未开始或已完成，直接进行退单
+                    System.out.println("播放：用户申请退单   设置订单退单");
+                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("watch").getApikey());
+                    if (status) {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
+                } else {
+                    userController.stopWatch(id, bvid);
+                }
+            }
+        } else {
+            System.out.println("暂无退单中播放订单");
+        }
+    }
+
+
+    @Scheduled(fixedRate = 10000)
+    public void handleLikeReturn() {
+        System.err.println("获取退单中点赞订单: " + LocalDateTime.now());
+        String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("like").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("like").getApikey();
+        String likeTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        List<Order> ordersTDZ = null;
+        try {
+            ordersTDZ = JSON.parseArray(JSON.parseObject(likeTDZOrder_json).getString("rows"), Order.class);
+        } catch (Exception e) {
+            System.out.println("获取退单中点赞订单出错");
+        }
+        if (ordersTDZ != null) {
+            for (Order order : ordersTDZ) {
+                String bvid = order.getAa();
+                String id = order.getId();
+                Integer likeTask = task.getLikeTask(bvid);
+                if (likeTask == null) {
+                    //订单未开始或已完成，直接进行退单
+                    System.out.println("点赞：用户申请退单   设置订单退单");
+                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("like").getApikey());
+                    if (status) {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
+                } else {
+                    userController.stopLike(id, bvid);
+                }
+            }
+        } else {
+            System.out.println("暂无退单中点赞订单");
+        }
+    }
+
+
+    @Scheduled(fixedRate = 10000)
+    public void handleFollowReturn() {
+        System.err.println("获取退单中关注订单: " + LocalDateTime.now());
+        String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("follow").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("follow").getApikey();
+        String followTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        List<Order> ordersTDZ = null;
+        try {
+            ordersTDZ = JSON.parseArray(JSON.parseObject(followTDZOrder_json).getString("rows"), Order.class);
+        } catch (Exception e) {
+            System.out.println("获取退单中关注订单出错");
+        }
+        if (ordersTDZ != null) {
+            for (Order order : ordersTDZ) {
+                String mid = order.getAa();
+                String id = order.getId();
+                Integer followTask = task.getFollowTask(mid);
+                if (followTask == null) {
+                    //订单未开始或已完成，直接进行退单
+                    System.out.println("关注：用户申请退单   设置订单退单");
+                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("follow").getApikey());
+                    if (status) {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
+                } else {
+                    userController.stopFollow(id, mid);
+                }
+            }
+        } else {
+            System.out.println("暂无退单中关注订单");
         }
     }
 }

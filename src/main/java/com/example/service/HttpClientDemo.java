@@ -7,7 +7,6 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -19,7 +18,6 @@ import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
-import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Service;
 
@@ -48,14 +46,26 @@ public class HttpClientDemo {
 
         SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
 
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(10000)
-                .setConnectTimeout(10000)
-                .setSocketTimeout(10000)
-                .setExpectContinueEnabled(false)
-                .setProxy(proxy)
-                .setCookieSpec(CookieSpecs.STANDARD)
-                .build();
+        RequestConfig requestConfig = null;
+
+        if (proxyInfo.getProxyOpen()) {
+            requestConfig = RequestConfig.custom()
+                    .setConnectionRequestTimeout(10000)
+                    .setConnectTimeout(10000)
+                    .setSocketTimeout(10000)
+                    .setExpectContinueEnabled(false)
+                    .setProxy(proxy)
+                    .setCookieSpec(CookieSpecs.STANDARD)
+                    .build();
+        } else {
+            requestConfig = RequestConfig.custom()
+                    .setConnectionRequestTimeout(10000)
+                    .setConnectTimeout(10000)
+                    .setSocketTimeout(10000)
+                    .setExpectContinueEnabled(false)
+                    .setCookieSpec(CookieSpecs.STANDARD)
+                    .build();
+        }
 
         clientBuilder = HttpClients.custom()
                 .setDefaultSocketConfig(socketConfig)
@@ -65,11 +75,12 @@ public class HttpClientDemo {
     }
 
 
-    public void updateProxyInfo(String _ProxyUser, String _ProxyPass, String _ProxyHost, Integer _ProxyPort) {
+    public void updateProxyInfo(String _ProxyUser, String _ProxyPass, String _ProxyHost, Integer _ProxyPort, Boolean _ProxyOpen) {
         proxyInfo.setProxyUser(_ProxyUser);
         proxyInfo.setProxyPass(_ProxyPass);
         proxyInfo.setProxyHost(_ProxyHost);
         proxyInfo.setProxyPort(_ProxyPort);
+        proxyInfo.setProxyOpen(_ProxyOpen);
 
         proxy = new HttpHost(proxyInfo.getProxyHost(), proxyInfo.getProxyPort(), "http");
 
@@ -78,14 +89,25 @@ public class HttpClientDemo {
 
         SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
 
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(10000)
-                .setConnectTimeout(10000)
-                .setSocketTimeout(10000)
-                .setExpectContinueEnabled(false)
-                .setProxy(proxy)
-                .setCookieSpec(CookieSpecs.STANDARD)
-                .build();
+        RequestConfig requestConfig = null;
+        if (proxyInfo.getProxyOpen()) {
+            requestConfig = RequestConfig.custom()
+                    .setConnectionRequestTimeout(10000)
+                    .setConnectTimeout(10000)
+                    .setSocketTimeout(10000)
+                    .setExpectContinueEnabled(false)
+                    .setProxy(proxy)
+                    .setCookieSpec(CookieSpecs.STANDARD)
+                    .build();
+        } else {
+            requestConfig = RequestConfig.custom()
+                    .setConnectionRequestTimeout(10000)
+                    .setConnectTimeout(10000)
+                    .setSocketTimeout(10000)
+                    .setExpectContinueEnabled(false)
+                    .setCookieSpec(CookieSpecs.STANDARD)
+                    .build();
+        }
 
         clientBuilder = HttpClients.custom()
                 .setDefaultSocketConfig(socketConfig)

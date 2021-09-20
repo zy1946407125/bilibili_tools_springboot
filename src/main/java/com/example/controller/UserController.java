@@ -386,7 +386,7 @@ public class UserController {
     @RequestMapping("/updateProxyInfo")
     public Object updateProxyInfo(Proxy proxy) {
         System.out.println(proxy);
-        httpClientDemo.updateProxyInfo(proxy.getProxyUser(), proxy.getProxyPass(), proxy.getProxyHost(), proxy.getProxyPort());
+        httpClientDemo.updateProxyInfo(proxy.getProxyUser(), proxy.getProxyPass(), proxy.getProxyHost(), proxy.getProxyPort(), proxy.getProxyOpen());
         Map<Object, Object> map = new HashMap<>();
         map.put("code", 0);
         map.put("message", "更新成功");

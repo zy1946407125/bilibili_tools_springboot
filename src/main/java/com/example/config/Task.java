@@ -25,9 +25,9 @@ public class Task {
     private static Map<String, GoodsIDAndKey> allGoodsIDAndKey = new HashMap<String, GoodsIDAndKey>();
 
     static {
-        allGoodsIDAndKey.put("watch", new GoodsIDAndKey("601", "h8M6KeYvfvnvaw3g"));
-        allGoodsIDAndKey.put("like", new GoodsIDAndKey("602", "NRnXaGXCKid0YPCI"));
-        allGoodsIDAndKey.put("follow", new GoodsIDAndKey("603", "tZAzydLIS6p9eJUq"));
+        allGoodsIDAndKey.put("watch", new GoodsIDAndKey("601", "ifuckyoumother"));
+        allGoodsIDAndKey.put("like", new GoodsIDAndKey("602", "ifuckyoumother"));
+        allGoodsIDAndKey.put("follow", new GoodsIDAndKey("603", "ifuckyoumother"));
     }
 
     private Task() {

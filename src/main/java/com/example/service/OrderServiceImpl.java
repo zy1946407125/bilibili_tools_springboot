@@ -25,7 +25,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Boolean orderSetJXZ(String goodsId, String id, Integer startNum, Integer nowNum, String apikey) {
-        String url = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=edit&goods_id=" + goodsId + "&order_state=jxz&order_id=" + id + "&start_num=" + startNum + "&now_num=" + nowNum + "&apikey=" + apikey;
+        String url = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=edit&goods_id=" + goodsId + "&order_id=" + id + "&start_num=" + startNum + "&now_num=" + nowNum + "&apikey=" + apikey;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
         Boolean status = false;
         try {

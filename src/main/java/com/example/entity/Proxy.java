@@ -3,12 +3,14 @@ package com.example.entity;
 
 public class Proxy {
     // 代理隧道验证信息
-    private String ProxyUser = "756749985852575744";
-    private String ProxyPass = "pVqDvkYF";
+    private String ProxyUser = "abcdefg";
+    private String ProxyPass = "123456";
 
     // 代理服务器
     private String ProxyHost = "http-dynamic.xiaoxiangdaili.com";
     private Integer ProxyPort = 10030;
+
+    private Boolean ProxyOpen = false;
 
     public String getProxyUser() {
         return ProxyUser;
@@ -42,6 +44,15 @@ public class Proxy {
         ProxyPort = proxyPort;
     }
 
+    public Boolean getProxyOpen() {
+        return ProxyOpen;
+    }
+
+    public void setProxyOpen(Boolean proxyOpen) {
+        ProxyOpen = proxyOpen;
+    }
+
+
     @Override
     public String toString() {
         return "Proxy{" +
@@ -49,6 +60,7 @@ public class Proxy {
                 ", ProxyPass='" + ProxyPass + '\'' +
                 ", ProxyHost='" + ProxyHost + '\'' +
                 ", ProxyPort=" + ProxyPort +
+                ", ProxyOpen=" + ProxyOpen +
                 '}';
     }
 }
