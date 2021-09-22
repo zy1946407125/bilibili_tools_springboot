@@ -37,16 +37,20 @@ public class TimingTask {
 
     private Task task = Task.getTask();
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 150000)
     private void getWatch() {
         System.err.println("获取进行中播放订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("watch").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("watch").getApikey();
         String watchJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        while (watchJXZOrder_json == null) {
+            watchJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        }
         List<Order> ordersJXZ = null;
         try {
             ordersJXZ = JSON.parseArray(JSON.parseObject(watchJXZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取进行中播放订单出错");
+            return;
         }
         if (ordersJXZ != null) {
             for (Order order : ordersJXZ) {
@@ -61,7 +65,7 @@ public class TimingTask {
                 try {
                     code = (Integer) bvinfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("播放：获取视频信息出错");
+                    System.out.println(BV + "播放：获取视频信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -121,16 +125,6 @@ public class TimingTask {
                             System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  退单失败");
                         }
                     }
-
-                } else {
-                    //视频BV号不正确，进行退单
-                    System.out.println("播放：设置订单退单");
-                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("watch").getApikey());
-                    if (status) {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         } else {
@@ -141,11 +135,15 @@ public class TimingTask {
         System.err.println("获取未开始播放订单: " + LocalDateTime.now());
         String urlWKS = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("watch").getGoodsId() + "&state=wks&format=json&apikey=" + task.getGoodsIDAndKey("watch").getApikey();
         String watchWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        while (watchWKSOrder_json == null) {
+            watchWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        }
         List<Order> ordersWKS = null;
         try {
             ordersWKS = JSON.parseArray(JSON.parseObject(watchWKSOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取未开始播放订单出错");
+            return;
         }
         if (ordersWKS != null) {
             for (Order order : ordersWKS) {
@@ -159,7 +157,7 @@ public class TimingTask {
                 try {
                     code = (Integer) bvinfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("播放：获取视频信息出错");
+                    System.out.println(BV + "播放：获取视频信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -216,7 +214,7 @@ public class TimingTask {
 
                 } else {
                     //视频BV号不正确，进行退单
-                    System.out.println("播放：设置订单退单");
+                    System.out.println("code:" + code + "播放：未进行，BV号不正确，设置订单退单");
                     Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("watch").getApikey());
                     if (status) {
                         System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
@@ -231,16 +229,20 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 150000)
     private void getLike() {
         System.err.println("获取进行中点赞订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("like").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("like").getApikey();
         String likeJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        while (likeJXZOrder_json == null) {
+            likeJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        }
         List<Order> ordersJXZ = null;
         try {
             ordersJXZ = JSON.parseArray(JSON.parseObject(likeJXZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取进行中点赞订单出错");
+            return;
         }
         if (ordersJXZ != null) {
             for (Order order : ordersJXZ) {
@@ -255,7 +257,7 @@ public class TimingTask {
                 try {
                     code = (Integer) bvinfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("点赞：获取视频信息出错");
+                    System.out.println(BV + "点赞：获取视频信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -280,7 +282,7 @@ public class TimingTask {
                         System.out.println(bvInfo.getId() + "  " + bvInfo.getBvid() + "  第一次进行点赞任务");
                         bvInfo.setStartLikeNum(like);
                     } else {
-                        System.out.println(bvInfo.getId() + "  " + bvInfo.getBvid() + "  非首次进行播放任务");
+                        System.out.println(bvInfo.getId() + "  " + bvInfo.getBvid() + "  非首次进行点赞任务");
                         bvInfo.setStartLikeNum(Integer.valueOf(startNum));
                     }
                     bvInfo.setNeedLikeNum(needNum);
@@ -315,16 +317,6 @@ public class TimingTask {
                             System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  退单失败");
                         }
                     }
-
-                } else {
-                    //视频BV号不正确，进行退单
-                    System.out.println("点赞：设置订单退单");
-                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("like").getApikey());
-                    if (status) {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         } else {
@@ -335,11 +327,15 @@ public class TimingTask {
         System.err.println("获取未开始点赞订单: " + LocalDateTime.now());
         String urlWKS = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("like").getGoodsId() + "&state=wks&format=json&apikey=" + task.getGoodsIDAndKey("like").getApikey();
         String likeWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        while (likeWKSOrder_json == null) {
+            likeWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        }
         List<Order> ordersWKS = null;
         try {
             ordersWKS = JSON.parseArray(JSON.parseObject(likeWKSOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取未开始点赞订单出错");
+            return;
         }
         if (ordersWKS != null) {
             for (Order order : ordersWKS) {
@@ -353,7 +349,7 @@ public class TimingTask {
                 try {
                     code = (Integer) bvinfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("点赞：获取视频信息出错");
+                    System.out.println(BV + "点赞：获取视频信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -410,7 +406,7 @@ public class TimingTask {
 
                 } else {
                     //视频BV号不正确，进行退单
-                    System.out.println("点赞：设置订单退单");
+                    System.out.println("code:" + code + "点赞：BV号不正确，设置订单退单");
                     Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("like").getApikey());
                     if (status) {
                         System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
@@ -425,16 +421,20 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 150000)
     private void getFollow() {
         System.err.println("获取进行中关注订单: " + LocalDateTime.now());
         String urlJXZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("follow").getGoodsId() + "&state=jxz&format=json&apikey=" + task.getGoodsIDAndKey("follow").getApikey();
         String likeJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        while (likeJXZOrder_json == null) {
+            likeJXZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlJXZ);
+        }
         List<Order> ordersJXZ = null;
         try {
             ordersJXZ = JSON.parseArray(JSON.parseObject(likeJXZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取进行中关注订单出错");
+            return;
         }
         if (ordersJXZ != null) {
             for (Order order : ordersJXZ) {
@@ -449,7 +449,7 @@ public class TimingTask {
                 try {
                     code = (Integer) userInfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("关注：获取用户信息出错");
+                    System.out.println(mid + "关注：获取用户信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -505,16 +505,6 @@ public class TimingTask {
                             System.out.println("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  退单失败");
                         }
                     }
-
-                } else {
-                    //用户mid号不正确，进行退单
-                    System.out.println("关注：设置订单退单");
-                    Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("follow").getApikey());
-                    if (status) {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        System.out.println("订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         } else {
@@ -525,11 +515,15 @@ public class TimingTask {
         System.err.println("获取未开始关注订单: " + LocalDateTime.now());
         String urlWKS = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("follow").getGoodsId() + "&state=wks&format=json&apikey=" + task.getGoodsIDAndKey("follow").getApikey();
         String followWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        while (followWKSOrder_json == null) {
+            followWKSOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlWKS);
+        }
         List<Order> ordersWKS = null;
         try {
             ordersWKS = JSON.parseArray(JSON.parseObject(followWKSOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取未开始关注订单出错");
+            return;
         }
         if (ordersWKS != null) {
             for (Order order : ordersWKS) {
@@ -543,7 +537,7 @@ public class TimingTask {
                 try {
                     code = (Integer) userInfoJSONObject.get("code");
                 } catch (Exception e) {
-                    System.out.println("关注：获取用户信息出错");
+                    System.out.println(mid + "关注：获取用户信息出错");
                 }
                 if (code == null) {
                     continue;
@@ -595,7 +589,7 @@ public class TimingTask {
 
                 } else {
                     //用户mid号不正确，进行退单
-                    System.out.println("关注：设置订单退单");
+                    System.out.println("code:" + code + "关注：用户mid不正确，设置订单退单");
                     Boolean status = orderService.orderReturn(id, task.getGoodsIDAndKey("follow").getApikey());
                     if (status) {
                         System.out.println("订单: " + id + "  更新商品页面《已退单》状态成功");
@@ -610,16 +604,28 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 150000)
     public void handleWatchReturn() {
         System.err.println("获取退单中播放订单: " + LocalDateTime.now());
         String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("watch").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("watch").getApikey();
         String watchTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        int total = watchTDZOrder_json.indexOf("total");
+        while (total == -1) {
+            System.out.println("获取退单中关注订单出错,重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            watchTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+            total = watchTDZOrder_json.indexOf("total");
+        }
         List<Order> ordersTDZ = null;
         try {
             ordersTDZ = JSON.parseArray(JSON.parseObject(watchTDZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取退单中播放订单出错");
+            return;
         }
         if (ordersTDZ != null) {
             for (Order order : ordersTDZ) {
@@ -645,16 +651,28 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 150000)
     public void handleLikeReturn() {
         System.err.println("获取退单中点赞订单: " + LocalDateTime.now());
         String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("like").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("like").getApikey();
         String likeTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        int total = likeTDZOrder_json.indexOf("total");
+        while (total == -1) {
+            System.out.println("获取退单中点赞订单出错，重新请求");
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            likeTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+            total = likeTDZOrder_json.indexOf("total");
+        }
         List<Order> ordersTDZ = null;
         try {
             ordersTDZ = JSON.parseArray(JSON.parseObject(likeTDZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取退单中点赞订单出错");
+            return;
         }
         if (ordersTDZ != null) {
             for (Order order : ordersTDZ) {
@@ -680,16 +698,28 @@ public class TimingTask {
     }
 
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 150000)
     public void handleFollowReturn() {
         System.err.println("获取退单中关注订单: " + LocalDateTime.now());
         String urlTDZ = "http://120.79.197.162/admin_jiuwuxiaohun.php?m=home&c=api&a=down_orders&goods_id=" + task.getGoodsIDAndKey("follow").getGoodsId() + "&state=tdz&format=json&apikey=" + task.getGoodsIDAndKey("follow").getApikey();
         String followTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+        int total = followTDZOrder_json.indexOf("total");
+        while (total == -1) {
+            System.out.println("获取退单中关注订单出错,重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            followTDZOrder_json = httpClientDemo.getUrlContent_Get_JSON(urlTDZ);
+            total = followTDZOrder_json.indexOf("total");
+        }
         List<Order> ordersTDZ = null;
         try {
             ordersTDZ = JSON.parseArray(JSON.parseObject(followTDZOrder_json).getString("rows"), Order.class);
         } catch (Exception e) {
             System.out.println("获取退单中关注订单出错");
+            return;
         }
         if (ordersTDZ != null) {
             for (Order order : ordersTDZ) {

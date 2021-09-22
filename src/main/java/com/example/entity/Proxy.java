@@ -3,8 +3,8 @@ package com.example.entity;
 
 public class Proxy {
     // 代理隧道验证信息
-    private String ProxyUser = "abcdefg";
-    private String ProxyPass = "123456";
+    private String ProxyUser = "abcd";
+    private String ProxyPass = "1234";
 
     // 代理服务器
     private String ProxyHost = "http-dynamic.xiaoxiangdaili.com";

@@ -105,11 +105,12 @@ public class UserController {
             map.put("bvInfos", getWatchBVInfoList());
             return map;
         } else {
-            bvInfo.setThreadNum(5);
+            bvInfo.setThreadNum(10);
             Long startTimeStamp = new Date().getTime();
             String startTimeStr = simpleDateFormat.format(startTimeStamp);
             bvInfo.setStartTimeStamp(startTimeStamp);
             bvInfo.setStartTimeStr(startTimeStr);
+
             if (bvInfo.getId() == null) {
                 System.out.println("id为空");
                 bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());

@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 
 @Service
@@ -26,6 +27,7 @@ public class AsyncServiceImpl implements AsyncService {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorConfig.class);
     private Task task = Task.getTask();
     private ThreadInfo threadInfo = ThreadInfo.getThreadInfo();
+    private Random random = new Random();
 
     @Autowired
     private HttpClientDemo httpClientDemo;
@@ -36,17 +38,16 @@ public class AsyncServiceImpl implements AsyncService {
     @Async("asyncServiceWatch")
     public void executeAsyncWatch(BVInfo bvInfo) {
         logger.info("start executeAsync watch");
-        Integer nowView = bvInfo.getStartWatchNum();
-        Integer oldView = bvInfo.getStartWatchNum();
-        Integer tmpView = bvInfo.getStartWatchNum();
+        Integer nowView = bvInfo.getNowWatchNum();
+        Integer tmpView;
         while (true) {
             Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
+            //tmp副本，避免nowView为空
             tmpView = nowView;
             nowView = bvViewAndLike.get("view");
-            oldView = bvInfo.getStartWatchNum();
-            logger.info("当前播放数量：" + nowView);
+            logger.info("<" + bvInfo.getBvid() + ">当前播放数量：" + nowView);
             if (nowView != null) {
-                if (oldView < nowView) {
+                if (bvInfo.getNowWatchNum() < nowView) {
                     //更新当前播放数
                     upDateView(bvInfo.getId(), nowView);
                     if (bvInfo.getId().length() < 12) {
@@ -71,11 +72,18 @@ public class AsyncServiceImpl implements AsyncService {
                 }
                 stringEntity.setContentType("application/x-www-form-urlencoded");
                 Object urlContent_post = httpClientDemo.getUrlContent_Post(targetUrl, stringEntity);
-                logger.info(JSONObject.toJSONString(urlContent_post));
-                try {
-                    Thread.sleep(2000);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (urlContent_post != null) {
+                    logger.info("<" + bvInfo.getBvid() + ">播放: " + JSONObject.toJSONString(urlContent_post));
+                    int randomNum = this.random.nextInt(4);
+                    randomNum = randomNum + 2;
+                    logger.info("<" + bvInfo.getBvid() + ">休眠" + randomNum + "秒");
+                    try {
+                        Thread.sleep(randomNum * 1000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    logger.info("<" + bvInfo.getBvid() + ">播放失败");
                 }
             } else {
                 break;
@@ -87,11 +95,17 @@ public class AsyncServiceImpl implements AsyncService {
             task.releaseWatchTask(bvInfo.getBvid(), 1);
         }
         Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
-        Integer view = bvViewAndLike.get("view");
+        Integer view;
+        while (true) {
+            view = bvViewAndLike.get("view");
+            if (view != null) {
+                break;
+            }
+        }
         //判断是否已经完成任务
         if ((bvInfo.getStartWatchNum() + bvInfo.getNeedWatchNum() <= view)) {
             //完成任务
-            logger.info("完成播放任务，当前数量：" + view);
+            logger.info("<" + bvInfo.getBvid() + ">完成播放任务，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "完成");
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("watch").getGoodsId(), bvInfo.getId(), bvInfo.getStartWatchNum(), view, task.getGoodsIDAndKey("watch").getApikey());
@@ -103,7 +117,7 @@ public class AsyncServiceImpl implements AsyncService {
             }
         } else if (task.getWatchTask(bvInfo.getBvid()) == null) {
             //强制停止
-            logger.info("强制停止，当前数量：" + view);
+            logger.info("<" + bvInfo.getBvid() + ">强制停止，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "停止");
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn(bvInfo.getId(), task.getGoodsIDAndKey("watch").getApikey());
@@ -120,17 +134,16 @@ public class AsyncServiceImpl implements AsyncService {
     @Async("asyncServiceLike")
     public void executeAsyncLike(BVInfo bvInfo) {
         logger.info("start executeAsync like");
-        Integer nowLike = bvInfo.getStartLikeNum();
-        Integer oldLike = bvInfo.getStartLikeNum();
-        Integer tmpLike = bvInfo.getStartLikeNum();
+        Integer nowLike = bvInfo.getNowLikeNum();
+        Integer tmpLike;
         for (int i = 0; i < task.getAccounts().size(); i++) {
             Map<String, Integer> bvViewAndLike = getBVViewAndLike(bvInfo.getBvid());
+            //tmp副本，避免nowLike为空
             tmpLike = nowLike;
             nowLike = bvViewAndLike.get("like");
-            oldLike = bvInfo.getStartLikeNum();
-            logger.info("当前点赞数量：" + nowLike);
+            logger.info("<" + bvInfo.getBvid() + ">当前点赞数量：" + nowLike);
             if (nowLike != null) {
-                if (oldLike < nowLike) {
+                if (bvInfo.getNowLikeNum() < nowLike) {
                     //更新当前点赞数
                     upDateLike(bvInfo.getId(), nowLike);
                     if (bvInfo.getId().length() < 12) {
@@ -159,21 +172,24 @@ public class AsyncServiceImpl implements AsyncService {
                 c = c + "SESSDATA=" + task.getAccounts().get(i).getSessData() + ";";
                 BasicHeader cookie = new BasicHeader("cookie", c);
                 JSONObject urlContent_post = httpClientDemo.getUrlContent_Post2(targetUrl, stringEntity, cookie);
-                logger.info(task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
-                Integer code = (Integer) urlContent_post.get("code");
-                logger.info("code:" + code);
-                bvInfo.setRequestNum(bvInfo.getRequestNum() + 1);
-                boolean upSuccess = false;
-                if (code == 0) {
-                    bvInfo.setSuccessNum(bvInfo.getSuccessNum() + 1);
-                    upSuccess = true;
-                }
-                upDataRequestNum(bvInfo.getId(), bvInfo.getRequestNum(), bvInfo.getSuccessNum());
-                task.upAccountLikeRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
-                try {
-                    Thread.sleep(5000);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (urlContent_post != null) {
+                    logger.info("<" + bvInfo.getBvid() + ">点赞: " + task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
+                    Integer code = urlContent_post.getInteger("code");
+                    bvInfo.setRequestNum(bvInfo.getRequestNum() + 1);
+                    boolean upSuccess = false;
+                    if (code == 0) {
+                        bvInfo.setSuccessNum(bvInfo.getSuccessNum() + 1);
+                        upSuccess = true;
+                    }
+                    upDataRequestNum(bvInfo.getId(), bvInfo.getRequestNum(), bvInfo.getSuccessNum());
+                    task.upAccountLikeRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
+                    try {
+                        Thread.sleep(5000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    logger.info("<" + bvInfo.getBvid() + ">点赞失败");
                 }
             } else {
                 break;
@@ -204,7 +220,7 @@ public class AsyncServiceImpl implements AsyncService {
         //判断是否已经完成任务
         if ((bvInfo.getStartLikeNum() + bvInfo.getNeedLikeNum() <= like)) {
             //完成任务
-            logger.info("完成点赞任务，当前数量：" + like);
+            logger.info("<" + bvInfo.getBvid() + ">完成点赞任务，当前数量：" + like);
             task.updateLikeBVInfo(bvInfo.getId(), "完成");
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("like").getGoodsId(), bvInfo.getId(), bvInfo.getStartLikeNum(), like, task.getGoodsIDAndKey("like").getApikey());
@@ -216,7 +232,7 @@ public class AsyncServiceImpl implements AsyncService {
             }
         } else if (task.getLikeTask(bvInfo.getBvid()) == null) {
             //强制停止
-            logger.info("强制停止，当前数量：" + like);
+            logger.info("<" + bvInfo.getBvid() + ">强制停止，当前数量：" + like);
             task.updateLikeBVInfo(bvInfo.getId(), "停止");
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn(bvInfo.getId(), task.getGoodsIDAndKey("like").getApikey());
@@ -235,16 +251,16 @@ public class AsyncServiceImpl implements AsyncService {
     public void executeAsyncFollow(UserInfo userInfo) {
         logger.info("start executeAsync follow");
         Integer nowFollow = userInfo.getStartFollowNum();
-        Integer oldFollow = userInfo.getStartFollowNum();
-        Integer tmpFollow = userInfo.getStartFollowNum();
+        Integer tmpFollow;
+
         for (int i = 0; i < task.getAccounts().size(); i++) {
             Map<String, Integer> userFans = getUserFans(userInfo.getMid());
+            //tmp副本，避免nowView为空
             tmpFollow = nowFollow;
             nowFollow = userFans.get("fans");
-            oldFollow = userInfo.getStartFollowNum();
-            logger.info("当前关注数量：" + nowFollow);
+            logger.info("<" + userInfo.getMid() + ">当前关注数量：" + nowFollow);
             if (nowFollow != null) {
-                if (oldFollow < nowFollow) {
+                if (userInfo.getNowFollowNum() < nowFollow) {
                     //更新当前关注数
                     upDateFans(userInfo.getId(), nowFollow);
                     if (userInfo.getId().length() < 12) {
@@ -278,21 +294,24 @@ public class AsyncServiceImpl implements AsyncService {
                 c = c + "SESSDATA=" + task.getAccounts().get(i).getSessData() + ";";
                 BasicHeader cookie = new BasicHeader("cookie", c);
                 JSONObject urlContent_post = httpClientDemo.getUrlContent_Post2(targetUrl, stringEntity, cookie);
-                logger.info(task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
-                Integer code = (Integer) urlContent_post.get("code");
-                logger.info("code:" + code);
-                userInfo.setRequestNum(userInfo.getRequestNum() + 1);
-                boolean upSuccess = false;
-                if (code == 0) {
-                    userInfo.setSuccessNum(userInfo.getSuccessNum() + 1);
-                    upSuccess = true;
-                }
-                task.upAccountFollowRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
-                upDataRequestNumFollow(userInfo.getId(), userInfo.getRequestNum(), userInfo.getSuccessNum());
-                try {
-                    Thread.sleep(5000);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (urlContent_post != null) {
+                    logger.info("<" + userInfo.getMid() + ">关注: " + task.getAccounts().get(i).getDedeUserID() + ": " + JSONObject.toJSONString(urlContent_post));
+                    Integer code = urlContent_post.getInteger("code");
+                    userInfo.setRequestNum(userInfo.getRequestNum() + 1);
+                    boolean upSuccess = false;
+                    if (code == 0) {
+                        userInfo.setSuccessNum(userInfo.getSuccessNum() + 1);
+                        upSuccess = true;
+                    }
+                    task.upAccountFollowRequestAndSuccess(task.getAccounts().get(i).getDedeUserID(), upSuccess);
+                    upDataRequestNumFollow(userInfo.getId(), userInfo.getRequestNum(), userInfo.getSuccessNum());
+                    try {
+                        Thread.sleep(5000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    logger.info("<" + userInfo.getMid() + ">关注失败");
                 }
             } else {
                 break;
@@ -323,7 +342,7 @@ public class AsyncServiceImpl implements AsyncService {
         //判断是否已经完成任务
         if ((userInfo.getStartFollowNum() + userInfo.getNeedFollowNum() <= fans)) {
             //完成任务
-            logger.info("完成关注任务，当前数量：" + fans);
+            logger.info("<" + userInfo.getMid() + ">完成关注任务，当前数量：" + fans);
             task.updateFollowUserInfo(userInfo.getId(), "完成");
             if (userInfo.getId().length() < 12) {
                 Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("follow").getGoodsId(), userInfo.getId(), userInfo.getStartFollowNum(), fans, task.getGoodsIDAndKey("follow").getApikey());
@@ -335,7 +354,7 @@ public class AsyncServiceImpl implements AsyncService {
             }
         } else if (task.getFollowTask(userInfo.getMid()) == null) {
             //强制停止
-            logger.info("强制停止，当前数量：" + fans);
+            logger.info("<" + userInfo.getMid() + ">强制停止，当前数量：" + fans);
             task.updateFollowUserInfo(userInfo.getId(), "停止");
             if (userInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn(userInfo.getId(), task.getGoodsIDAndKey("follow").getApikey());
@@ -353,12 +372,15 @@ public class AsyncServiceImpl implements AsyncService {
     public Map<String, Integer> getBVViewAndLike(String bvid) {
         String url = "https://api.bilibili.com/x/web-interface/view?bvid=" + bvid;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        while (urlContent_get == null) {
+            urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        }
         Map<String, Integer> map = new HashMap<>();
         try {
             JSONObject data = (JSONObject) urlContent_get.get("data");
             JSONObject stat = (JSONObject) data.get("stat");
-            Integer view = (Integer) stat.get("view");
-            Integer like = (Integer) stat.get("like");
+            Integer view = stat.getInteger("view");
+            Integer like = stat.getInteger("like");
             map.put("view", view);
             map.put("like", like);
             return map;
@@ -372,11 +394,14 @@ public class AsyncServiceImpl implements AsyncService {
     public Map<String, Integer> getUserFans(String mid) {
         String url = "https://api.bilibili.com/x/web-interface/card?mid=" + mid;
         JSONObject urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        while (urlContent_get == null) {
+            urlContent_get = httpClientDemo.getUrlContent_Get(url);
+        }
         Map<String, Integer> map = new HashMap<>();
         try {
             JSONObject data = (JSONObject) urlContent_get.get("data");
             JSONObject card = (JSONObject) data.get("card");
-            Integer fans = (Integer) card.get("fans");
+            Integer fans = card.getInteger("fans");
             map.put("fans", fans);
             return map;
         } catch (Exception e) {
@@ -385,7 +410,7 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    void upDateView(String id, Integer view) {
+    synchronized void upDateView(String id, Integer view) {
         for (int i = 0; i < task.getWatchBVInfo().size(); i++) {
             if (task.getWatchBVInfo().get(i).getId().equals(id)) {
                 task.getWatchBVInfo().get(i).setNowWatchNum(view);
@@ -394,7 +419,7 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    void upDateLike(String id, Integer like) {
+    synchronized void upDateLike(String id, Integer like) {
         for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
             if (task.getLikeBVInfo().get(i).getId().equals(id)) {
                 task.getLikeBVInfo().get(i).setNowLikeNum(like);
@@ -403,7 +428,7 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    void upDateFans(String id, Integer fans) {
+    synchronized void upDateFans(String id, Integer fans) {
         for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
             if (task.getFollowUserInfos().get(i).getId().equals(id)) {
                 task.getFollowUserInfos().get(i).setNowFollowNum(fans);
@@ -412,7 +437,7 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    void upDataRequestNum(String id, Integer requestNum, Integer successNum) {
+    synchronized void upDataRequestNum(String id, Integer requestNum, Integer successNum) {
         for (int i = 0; i < task.getLikeBVInfo().size(); i++) {
             if (task.getLikeBVInfo().get(i).getId().equals(id)) {
                 task.getLikeBVInfo().get(i).setRequestNum(requestNum);
@@ -422,7 +447,7 @@ public class AsyncServiceImpl implements AsyncService {
         }
     }
 
-    void upDataRequestNumFollow(String id, Integer requestNum, Integer successNum) {
+    synchronized void upDataRequestNumFollow(String id, Integer requestNum, Integer successNum) {
         for (int i = 0; i < task.getFollowUserInfos().size(); i++) {
             if (task.getFollowUserInfos().get(i).getId().equals(id)) {
                 task.getFollowUserInfos().get(i).setRequestNum(requestNum);

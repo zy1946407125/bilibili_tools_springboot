@@ -22,6 +22,8 @@ public class BVInfo {
     private Integer requestNum;
     private Integer successNum;
 
+
+
     public String getId() {
         return id;
     }
@@ -173,7 +175,6 @@ public class BVInfo {
     public void setSuccessNum(Integer successNum) {
         this.successNum = successNum;
     }
-
 
     @Override
     public String toString() {
