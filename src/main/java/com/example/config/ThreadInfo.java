@@ -1,15 +1,11 @@
 package com.example.config;
 
-import java.util.HashMap;
-import java.util.Map;
-
-
 public class ThreadInfo {
 
     private static ThreadInfo threadInfo = new ThreadInfo();
-    private int watchThreadNum = 150;
-    private int likeThreadNum = 15;
-    private int followThreadNum = 15;
+    private int watchThreadNum = 100;
+    private int likeThreadNum = 10;
+    private int followThreadNum = 10;
 
     private ThreadInfo() {
     }
@@ -17,7 +13,6 @@ public class ThreadInfo {
     public static ThreadInfo getThreadInfo() {
         return threadInfo;
     }
-
 
 
     public synchronized int getWatchThreadNum() {
@@ -33,7 +28,6 @@ public class ThreadInfo {
     }
 
 
-
     public synchronized void releaseWatchThreadNum() {
         watchThreadNum += 1;
     }
@@ -45,7 +39,6 @@ public class ThreadInfo {
     public synchronized void releaseFollowThreadNum() {
         followThreadNum += 1;
     }
-
 
 
     public synchronized void subWatchThreadNum(int cnt) {

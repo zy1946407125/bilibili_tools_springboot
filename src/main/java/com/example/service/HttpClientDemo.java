@@ -25,13 +25,6 @@ import java.io.IOException;
 
 @Service
 public class HttpClientDemo {
-    //    // 代理隧道验证信息
-//    private String ProxyUser = "";
-//    private String ProxyPass = "";
-//
-//    // 代理服务器
-//    private String ProxyHost = "http-dynamic.xiaoxiangdaili.com";
-//    private Integer ProxyPort = 10030;
     private static Proxy proxyInfo = null;
 
     private static HttpHost proxy = null;
@@ -260,10 +253,6 @@ public class HttpClientDemo {
         httpPost.addHeader("Cache-Control", "max-age=0");
         httpPost.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
 
-//        BasicHeader cookie = new BasicHeader("cookie", "buvid2=F7A7D447-BBC8-41D1-B496-C6435F89E8AC148823infoc;buvid3=F7A7D447-BBC8-41D1-B496-C6435F89E8AC148823infoc;SESSDATA=b8b80c73%2C1647154555%2Cead1f%2A91;");
-//        BasicHeader cookie = new BasicHeader("cookie", "SESSDATA=b8b80c73%2C1647154555%2Cead1f%2A91;");
-
-//        BasicHeader cookie = new BasicHeader("cookie", "buvid2=A5C98A33-E9E2-4048-BD03-842F68F9DB86148822infoc;buvid3=A5C98A33-E9E2-4048-BD03-842F68F9DB86148822infoc;SESSDATA=6687671e%2C1646835788%2Ca6604%2A91");
         httpPost.addHeader(cookie);
 
         if (stringEntity != null) {
@@ -306,24 +295,9 @@ public class HttpClientDemo {
 
     public static void main(String[] args) throws Exception {
         // 要访问的目标页面
-        String targetUrl = "https://api.bilibili.com/x/relation/modify";
-
-        String str = "fid=" + "54076139";
-        str = str + "&act=" + "1";
-        str = str + "&re_src=" + "11";
-        str = str + "&jsonp=" + "jsonp";
-        str = str + "&csrf=" + "1982d8f7fadb10a2ae532edcc2c5589a";
-        System.out.println(str);
-        StringEntity stringEntity = new StringEntity(str);
-        stringEntity.setContentType("application/x-www-form-urlencoded");
-
-        String c = "buvid2=" + "F2FF6966-3F7B-474E-BAFD-F00AABCAA61C167616infoc" + ";";
-        c = c + "buvid3=" + "F2FF6966-3F7B-474E-BAFD-F00AABCAA61C167616infoc" + ";";
-        c = c + "SESSDATA=" + "23be4337%2C1646835674%2C1f988%2A91" + ";";
-        System.out.println("cookie: " + c);
-        BasicHeader cookie = new BasicHeader("cookie", c);
-
-        JSONObject urlContent_post2 = new HttpClientDemo().getUrlContent_Post2(targetUrl, stringEntity, cookie);
-        System.out.println(urlContent_post2);
+        String targetUrl = "http://httpbin.org/ip";
+        HttpClientDemo httpClientDemo = new HttpClientDemo();
+        String urlContent_get_json = httpClientDemo.getUrlContent_Get_JSON(targetUrl);
+        System.out.println(urlContent_get_json);
     }
 }

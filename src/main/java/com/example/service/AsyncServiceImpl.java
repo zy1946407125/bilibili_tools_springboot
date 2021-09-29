@@ -7,7 +7,6 @@ import com.example.config.ThreadInfo;
 import com.example.entity.BVInfo;
 import com.example.entity.UserInfo;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -51,11 +49,11 @@ public class AsyncServiceImpl implements AsyncService {
                     //更新当前播放数
                     upDateView(bvInfo.getId(), nowView);
                     if (bvInfo.getId().length() < 12) {
-                        Boolean status = orderService.orderSetJXZ(task.getGoodsIDAndKey("watch").getGoodsId(), bvInfo.getId(), bvInfo.getStartWatchNum(), nowView, task.getGoodsIDAndKey("watch").getApikey());
+                        Boolean status = orderService.updateOrder("watch", "jxz", bvInfo.getId(), bvInfo.getStartWatchNum(), nowView);
                         if (status) {
-                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数成功");
+                            logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数成功");
                         } else {
-                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数失败");
+                            logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前播放数失败");
                         }
                     }
                 }
@@ -108,11 +106,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + bvInfo.getBvid() + ">完成播放任务，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "完成");
             if (bvInfo.getId().length() < 12) {
-                Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("watch").getGoodsId(), bvInfo.getId(), bvInfo.getStartWatchNum(), view, task.getGoodsIDAndKey("watch").getApikey());
+                Boolean status = orderService.updateOrder("watch", "ywc", bvInfo.getId(), bvInfo.getStartWatchNum(), view);
                 if (status) {
-                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
                 } else {
-                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
                 }
             }
         } else if (task.getWatchTask(bvInfo.getBvid()) == null) {
@@ -120,11 +118,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + bvInfo.getBvid() + ">强制停止，当前数量：" + view);
             task.updateWatchBVInfo(bvInfo.getId(), "停止");
             if (bvInfo.getId().length() < 12) {
-                Boolean status = orderService.orderReturn(bvInfo.getId(), task.getGoodsIDAndKey("watch").getApikey());
+                Boolean status = orderService.orderReturn("watch", bvInfo.getId());
                 if (status) {
-                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
+                    System.out.println("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
+                    System.out.println("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }
@@ -147,11 +145,11 @@ public class AsyncServiceImpl implements AsyncService {
                     //更新当前点赞数
                     upDateLike(bvInfo.getId(), nowLike);
                     if (bvInfo.getId().length() < 12) {
-                        Boolean status = orderService.orderSetJXZ(task.getGoodsIDAndKey("like").getGoodsId(), bvInfo.getId(), bvInfo.getStartLikeNum(), nowLike, task.getGoodsIDAndKey("like").getApikey());
+                        Boolean status = orderService.updateOrder("like", "jxz", bvInfo.getId(), bvInfo.getStartLikeNum(), nowLike);
                         if (status) {
-                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数成功");
+                            logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数成功");
                         } else {
-                            logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数失败");
+                            logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数失败");
                         }
                     }
                 }
@@ -207,11 +205,11 @@ public class AsyncServiceImpl implements AsyncService {
             if (like != null) {
                 upDateLike(bvInfo.getId(), like);
                 if (bvInfo.getId().length() < 12) {
-                    Boolean status = orderService.orderSetJXZ(task.getGoodsIDAndKey("like").getGoodsId(), bvInfo.getId(), bvInfo.getStartLikeNum(), like, task.getGoodsIDAndKey("like").getApikey());
+                    Boolean status = orderService.updateOrder("like", "jxz", bvInfo.getId(), bvInfo.getStartLikeNum(), like);
                     if (status) {
-                        logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数成功");
+                        logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数成功");
                     } else {
-                        logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数失败");
+                        logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面当前点赞数失败");
                     }
                 }
                 break;
@@ -223,11 +221,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + bvInfo.getBvid() + ">完成点赞任务，当前数量：" + like);
             task.updateLikeBVInfo(bvInfo.getId(), "完成");
             if (bvInfo.getId().length() < 12) {
-                Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("like").getGoodsId(), bvInfo.getId(), bvInfo.getStartLikeNum(), like, task.getGoodsIDAndKey("like").getApikey());
+                Boolean status = orderService.updateOrder("like", "ywc", bvInfo.getId(), bvInfo.getStartLikeNum(), like);
                 if (status) {
-                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
                 } else {
-                    logger.info("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已完成》状态成功");
                 }
             }
         } else if (task.getLikeTask(bvInfo.getBvid()) == null) {
@@ -235,11 +233,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + bvInfo.getBvid() + ">强制停止，当前数量：" + like);
             task.updateLikeBVInfo(bvInfo.getId(), "停止");
             if (bvInfo.getId().length() < 12) {
-                Boolean status = orderService.orderReturn(bvInfo.getId(), task.getGoodsIDAndKey("like").getApikey());
+                Boolean status = orderService.orderReturn("like", bvInfo.getId());
                 if (status) {
-                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
+                    System.out.println("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
+                    System.out.println("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }
@@ -264,11 +262,11 @@ public class AsyncServiceImpl implements AsyncService {
                     //更新当前关注数
                     upDateFans(userInfo.getId(), nowFollow);
                     if (userInfo.getId().length() < 12) {
-                        Boolean status = orderService.orderSetJXZ(task.getGoodsIDAndKey("follow").getGoodsId(), userInfo.getId(), userInfo.getStartFollowNum(), nowFollow, task.getGoodsIDAndKey("follow").getApikey());
+                        Boolean status = orderService.updateOrder("follow", "jxz", userInfo.getId(), userInfo.getStartFollowNum(), nowFollow);
                         if (status) {
-                            logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数成功");
+                            logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数成功");
                         } else {
-                            logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数失败");
+                            logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数失败");
                         }
                     }
                 }
@@ -329,11 +327,11 @@ public class AsyncServiceImpl implements AsyncService {
             if (fans != null) {
                 upDateFans(userInfo.getId(), fans);
                 if (userInfo.getId().length() < 12) {
-                    Boolean status = orderService.orderSetJXZ(task.getGoodsIDAndKey("follow").getGoodsId(), userInfo.getId(), userInfo.getStartFollowNum(), fans, task.getGoodsIDAndKey("follow").getApikey());
+                    Boolean status = orderService.updateOrder("follow", "jxz", userInfo.getId(), userInfo.getStartFollowNum(), fans);
                     if (status) {
-                        logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数成功");
+                        logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数成功");
                     } else {
-                        logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数失败");
+                        logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面当前关注数失败");
                     }
                 }
                 break;
@@ -345,11 +343,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + userInfo.getMid() + ">完成关注任务，当前数量：" + fans);
             task.updateFollowUserInfo(userInfo.getId(), "完成");
             if (userInfo.getId().length() < 12) {
-                Boolean status = orderService.orderSetYWC(task.getGoodsIDAndKey("follow").getGoodsId(), userInfo.getId(), userInfo.getStartFollowNum(), fans, task.getGoodsIDAndKey("follow").getApikey());
+                Boolean status = orderService.updateOrder("follow", "ywc", userInfo.getId(), userInfo.getStartFollowNum(), fans);
                 if (status) {
-                    logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已完成》状态成功");
                 } else {
-                    logger.info("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已完成》状态成功");
+                    logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已完成》状态成功");
                 }
             }
         } else if (task.getFollowTask(userInfo.getMid()) == null) {
@@ -357,11 +355,11 @@ public class AsyncServiceImpl implements AsyncService {
             logger.info("<" + userInfo.getMid() + ">强制停止，当前数量：" + fans);
             task.updateFollowUserInfo(userInfo.getId(), "停止");
             if (userInfo.getId().length() < 12) {
-                Boolean status = orderService.orderReturn(userInfo.getId(), task.getGoodsIDAndKey("follow").getApikey());
+                Boolean status = orderService.orderReturn("follow", userInfo.getId());
                 if (status) {
-                    System.out.println("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态成功");
+                    System.out.println("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态失败");
+                    System.out.println("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }

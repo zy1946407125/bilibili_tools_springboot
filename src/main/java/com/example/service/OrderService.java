@@ -1,16 +1,13 @@
 package com.example.service;
 
-import org.springframework.stereotype.Service;
+import com.alibaba.fastjson.JSONObject;
 
 
 public interface OrderService {
 
-    public Boolean orderReturn(String id, String apikey);
+    public Boolean orderReturn(String goodsType, String id);
 
-    public Boolean orderSetJXZ(String goodsId, String id, Integer startNum, Integer nowNum, String apikey);
+    public JSONObject getOrder(String goodsType, String state, boolean update);
 
-    public Boolean orderSetWKS(String goodsId, String id, Integer startNum, Integer nowNum, String apikey);
-
-    public Boolean orderSetYWC(String goodsId, String id, Integer startNum, Integer nowNum, String apikey);
-
+    public Boolean updateOrder(String goodsType, String orderState, String id, Integer startNum, Integer nowNum);
 }

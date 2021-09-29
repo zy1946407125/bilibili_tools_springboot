@@ -15,5 +15,5 @@ public interface AsyncService {
 
     Map<String, Integer> getBVViewAndLike(String bvid);
 
-    public Map<String, Integer> getUserFans(String mid);
+    Map<String, Integer> getUserFans(String mid);
 }
