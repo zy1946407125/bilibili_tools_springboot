@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -377,6 +378,18 @@ public class UserController {
     @RequestMapping("/addAccount")
     public Object addAccount(Account account) {
         task.addAccount(account);
+        Map<Object, Object> map = new HashMap<>();
+        map.put("code", 0);
+        map.put("message", "添加成功");
+        map.put("accountData", task.getAccounts());
+        return map;
+    }
+
+    @RequestMapping("/addAccounts")
+    public Object addAccount(@RequestBody Account[] accounts) {
+        for (Account account : accounts) {
+            task.addAccount(account);
+        }
         Map<Object, Object> map = new HashMap<>();
         map.put("code", 0);
         map.put("message", "添加成功");

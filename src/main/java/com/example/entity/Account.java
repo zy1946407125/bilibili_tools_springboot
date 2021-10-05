@@ -11,6 +11,17 @@ public class Account {
     private Integer followRequestNum = 0;
     private Integer followSuccessNum = 0;
 
+    public Account() {
+    }
+
+    public Account(String dedeUserID, String buvid2, String buvid3, String bili_jct, String sessData) {
+        this.dedeUserID = dedeUserID;
+        this.buvid2 = buvid2;
+        this.buvid3 = buvid3;
+        this.bili_jct = bili_jct;
+        this.sessData = sessData;
+    }
+
     public String getDedeUserID() {
         return dedeUserID;
     }
