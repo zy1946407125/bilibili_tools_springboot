@@ -1,12 +1,16 @@
 package com.example.timingTask;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.config.ExecutorConfig;
 import com.example.config.Task;
 import com.example.controller.UserController;
 import com.example.entity.BVInfo;
 import com.example.entity.Order;
 import com.example.entity.UserInfo;
+import com.example.service.HttpClientDemo;
 import com.example.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
@@ -27,6 +31,19 @@ public class TimingTask {
     private UserController userController;
 
     private Task task = Task.getTask();
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutorConfig.class);
+
+    @Autowired
+    private HttpClientDemo httpClientDemo;
+
+    @Scheduled(fixedDelay = 10000)
+    public void a() {
+        httpClientDemo.updateProxyHostPort();
+        String urlContent_get_json = httpClientDemo.getUrlContent_Get_JSON("http://pv.sohu.com/cityjson");
+        System.out.println(urlContent_get_json);
+        logger.info("更新代理成功\n\n\n\n\n\n\n\n\n\n");
+    }
 
     @Scheduled(fixedDelay = 60000)
     void getWatch() {
