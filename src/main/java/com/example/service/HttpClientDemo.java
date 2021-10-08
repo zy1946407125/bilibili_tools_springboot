@@ -1,6 +1,7 @@
 package com.example.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.config.ExecutorConfig;
 import com.example.entity.Proxy;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -17,6 +18,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.message.BasicHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -29,6 +32,7 @@ public class HttpClientDemo {
     private static HttpHost proxy = null;
     private static HttpClientBuilder clientBuilder = null;
     private static HttpClientBuilder clientBuilderNoProxy = null;
+    private static final Logger logger = LoggerFactory.getLogger(ExecutorConfig.class);
 
     static {
         proxyInfo = new Proxy();
@@ -109,7 +113,6 @@ public class HttpClientDemo {
 
             html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
             jsonObject = JSONObject.parseObject(html);
-            System.out.println(jsonObject);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {
@@ -127,7 +130,7 @@ public class HttpClientDemo {
     public void updateProxyHostPort() {
         JSONObject jsonObject = getProxyHostPort();
         while (jsonObject == null || jsonObject.getInteger("code") != 200) {
-            System.out.println("获取代理IP出错，休眠10秒重新获取");
+            logger.info("获取代理IP出错，休眠10秒重新获取");
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
@@ -135,7 +138,7 @@ public class HttpClientDemo {
             }
             jsonObject = getProxyHostPort();
         }
-        System.out.println("获取代理IP成功");
+        logger.info("获取代理IP成功");
         List<JSONObject> data = JSONObject.parseArray(jsonObject.getJSONArray("data").toJSONString(), JSONObject.class);
         if (data.size() >= 1) {
             proxyInfo.setProxyHost(data.get(0).getString("ip"));
@@ -184,9 +187,9 @@ public class HttpClientDemo {
 
 
     public Proxy getProxyInfo() {
-        System.out.println(proxyInfo);
-        System.out.println(proxy);
-        System.out.println(clientBuilder);
+        logger.info(String.valueOf(proxyInfo));
+        logger.info(String.valueOf(proxy));
+        logger.info(String.valueOf(clientBuilder));
         return proxyInfo;
     }
 
@@ -217,8 +220,8 @@ public class HttpClientDemo {
 
             html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
             jsonObject = JSONObject.parseObject(html);
-//            System.out.println(html);
-//            System.out.println(jsonObject);
+//            logger.info(html);
+//            logger.info(jsonObject);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {
@@ -258,8 +261,8 @@ public class HttpClientDemo {
             httpResp = clientBuilder.build().execute(httpGet, localContext);
 
             html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
-//            System.out.println(html);
-//            System.out.println(jsonObject);
+//            logger.info(html);
+//            logger.info(jsonObject);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {
@@ -303,8 +306,8 @@ public class HttpClientDemo {
 
             String html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
             jsonObject = JSONObject.parseObject(html);
-//            System.out.println(html);
-//            System.out.println(jsonObject);
+//            logger.info(html);
+//            logger.info(jsonObject);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {
@@ -352,8 +355,8 @@ public class HttpClientDemo {
 
             String html = IOUtils.toString(httpResp.getEntity().getContent(), "UTF-8");
             jsonObject = JSONObject.parseObject(html);
-//            System.out.println(html);
-//            System.out.println(jsonObject);
+//            logger.info(html);
+//            logger.info(jsonObject);
         } catch (Exception e) {
 //            e.printStackTrace();
         } finally {
@@ -374,6 +377,6 @@ public class HttpClientDemo {
         String targetUrl = "http://pv.sohu.com/cityjson";
         HttpClientDemo httpClientDemo = new HttpClientDemo();
         String urlContent_get_json = httpClientDemo.getUrlContent_Get_JSON(targetUrl);
-        System.out.println(urlContent_get_json);
+        logger.info(urlContent_get_json);
     }
 }

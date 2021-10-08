@@ -83,12 +83,12 @@ public class UserController {
             bvInfo.setStartTimeStr(startTimeStr);
 
             if (bvInfo.getId() == null) {
-                System.out.println("id为空");
+                logger.info("id为空");
                 bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
             }
             if (threadInfo.getWatchThreadNum() - bvInfo.getThreadNum() >= 0) {
                 bvInfo.setStatus("运行");
-                System.out.println(bvInfo);
+                logger.info(String.valueOf(bvInfo));
                 task.addWatchBVInfo(bvInfo);
                 threadInfo.subWatchThreadNum(bvInfo.getThreadNum());
                 task.setWatchTask(bvInfo.getBvid(), bvInfo.getThreadNum());
@@ -175,14 +175,14 @@ public class UserController {
             bvInfo.setStartTimeStamp(startTimeStamp);
             bvInfo.setStartTimeStr(startTimeStr);
             if (bvInfo.getId() == null) {
-                System.out.println("id为空");
+                logger.info("id为空");
                 bvInfo.setId(bvInfo.getBvid() + "_" + bvInfo.getStartTimeStamp());
             }
             bvInfo.setRequestNum(0);
             bvInfo.setSuccessNum(0);
             if (threadInfo.getLikeThreadNum() - bvInfo.getThreadNum() >= 0) {
                 bvInfo.setStatus("运行");
-                System.out.println(bvInfo);
+                logger.info(String.valueOf(bvInfo));
                 task.addLikeBVInfo(bvInfo);
                 threadInfo.subLikeThreadNum(bvInfo.getThreadNum());
                 task.setLikeTask(bvInfo.getBvid(), bvInfo.getThreadNum());
@@ -268,14 +268,14 @@ public class UserController {
             userInfo.setStartTimeStamp(startTimeStamp);
             userInfo.setStartTimeStr(startTimeStr);
             if (userInfo.getId() == null) {
-                System.out.println("id为空");
+                logger.info("id为空");
                 userInfo.setId(userInfo.getMid() + "_" + userInfo.getStartTimeStamp());
             }
             userInfo.setRequestNum(0);
             userInfo.setSuccessNum(0);
             if (threadInfo.getFollowThreadNum() - userInfo.getThreadNum() >= 0) {
                 userInfo.setStatus("运行");
-                System.out.println(userInfo);
+                logger.info(String.valueOf(userInfo));
                 task.addFollowUserInfo(userInfo);
                 threadInfo.subFollowThreadNum(userInfo.getThreadNum());
                 task.setFollowTask(userInfo.getMid(), userInfo.getThreadNum());
@@ -357,7 +357,7 @@ public class UserController {
 
     @RequestMapping("/updateProxyInfo")
     public Object updateProxyInfo(Proxy proxy) {
-        System.out.println(proxy);
+        logger.info(String.valueOf(proxy));
         httpClientDemo.updateProxyInfo(proxy.getProxyUser(), proxy.getProxyPass(),proxy.getProxyOpen());
         Map<Object, Object> map = new HashMap<>();
         map.put("code", 0);

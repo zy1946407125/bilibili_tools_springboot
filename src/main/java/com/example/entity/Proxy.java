@@ -3,8 +3,8 @@ package com.example.entity;
 
 public class Proxy {
     // 代理ip账号密码
-    private String ProxyUser = "763573266375135232";
-    private String ProxyPass = "51ILWSrL";
+    private String ProxyUser = "763633121274253312";
+    private String ProxyPass = "SqLpBDcV";
 
     private Boolean ProxyOpen = true;
 

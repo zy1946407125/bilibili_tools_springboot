@@ -120,9 +120,9 @@ public class AsyncServiceImpl implements AsyncService {
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn("watch", bvInfo.getId());
                 if (status) {
-                    System.out.println("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
+                    logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
+                    logger.info("播放订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }
@@ -235,9 +235,9 @@ public class AsyncServiceImpl implements AsyncService {
             if (bvInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn("like", bvInfo.getId());
                 if (status) {
-                    System.out.println("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
+                    logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
+                    logger.info("点赞订单: " + bvInfo.getId() + "   BV: " + bvInfo.getBvid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }
@@ -357,9 +357,9 @@ public class AsyncServiceImpl implements AsyncService {
             if (userInfo.getId().length() < 12) {
                 Boolean status = orderService.orderReturn("follow", userInfo.getId());
                 if (status) {
-                    System.out.println("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态成功");
+                    logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态成功");
                 } else {
-                    System.out.println("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态失败");
+                    logger.info("关注订单: " + userInfo.getId() + "   mid: " + userInfo.getMid() + "  更新商品页面《已退单》状态失败");
                 }
             }
         }
