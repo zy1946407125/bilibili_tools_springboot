@@ -49,8 +49,18 @@ public class TimingTask {
     void getWatch() {
         logger.info("获取进行中播放订单: " + LocalDateTime.now());
         JSONObject watchJXZOrder_JSONObject = orderService.getOrder("watch", "jxz", false);
+        int i = 0;
         while (watchJXZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取进行中播放订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             watchJXZOrder_JSONObject = orderService.getOrder("watch", "jxz", false);
         }
         if (watchJXZOrder_JSONObject.getInteger("total") == 0) {
@@ -132,15 +142,6 @@ public class TimingTask {
                         }
                         break;
                     }
-                } else {
-                    //视频BV号不正确，进行退单
-                    logger.info("code:" + code + " 播放：进行中，BV号不正确，设置订单退单");
-                    Boolean status = orderService.orderReturn("watch", id);
-                    if (status) {
-                        logger.info("播放订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        logger.info("播放订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         }
@@ -148,8 +149,18 @@ public class TimingTask {
 
         System.err.println("获取未开始播放订单: " + LocalDateTime.now());
         JSONObject watchWKSOrder_JSONObject = orderService.getOrder("watch", "wks", false);
+        int j = 0;
         while (watchWKSOrder_JSONObject == null) {
+            if (j == 3) {
+                return;
+            }
+            j++;
             logger.info("获取未开始播放订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             watchWKSOrder_JSONObject = orderService.getOrder("watch", "wks", false);
         }
         logger.info("获取未开始播放订单成功");
@@ -246,8 +257,18 @@ public class TimingTask {
     void getLike() {
         System.err.println("获取进行中点赞订单: " + LocalDateTime.now());
         JSONObject likeJXZOrder_JSONObject = orderService.getOrder("like", "jxz", false);
+        int i = 0;
         while (likeJXZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取进行中点赞订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             likeJXZOrder_JSONObject = orderService.getOrder("like", "jxz", false);
         }
         logger.info("获取进行中点赞订单成功");
@@ -330,15 +351,6 @@ public class TimingTask {
                         }
                         break;
                     }
-                } else {
-                    //视频BV号不正确，进行退单
-                    logger.info("code:" + code + " 点赞 进行中：BV号不正确，设置订单退单");
-                    Boolean status = orderService.orderReturn("like", id);
-                    if (status) {
-                        logger.info("点赞订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        logger.info("点赞订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         }
@@ -346,8 +358,18 @@ public class TimingTask {
 
         System.err.println("获取未开始点赞订单: " + LocalDateTime.now());
         JSONObject likeWKSOrder_JSONObject = orderService.getOrder("like", "wks", false);
+        int j = 0;
         while (likeWKSOrder_JSONObject == null) {
+            if (j == 3) {
+                return;
+            }
+            j++;
             logger.info("获取未开始点赞订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             likeWKSOrder_JSONObject = orderService.getOrder("like", "wks", false);
         }
         logger.info("获取未开始点赞订单成功");
@@ -443,8 +465,18 @@ public class TimingTask {
     void getFollow() {
         System.err.println("获取进行中关注订单: " + LocalDateTime.now());
         JSONObject followJXZOrder_JSONObject = orderService.getOrder("follow", "jxz", false);
+        int i = 0;
         while (followJXZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取进行中关注订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             followJXZOrder_JSONObject = orderService.getOrder("follow", "jxz", false);
         }
         logger.info("获取进行中关注订单成功");
@@ -523,15 +555,6 @@ public class TimingTask {
                         }
                         break;
                     }
-                } else {
-                    //用户mid号不正确，进行退单
-                    logger.info("code:" + code + " 关注 进行中：用户mid不正确，设置订单退单");
-                    Boolean status = orderService.orderReturn("follow", id);
-                    if (status) {
-                        logger.info("关注订单: " + id + "  更新商品页面《已退单》状态成功");
-                    } else {
-                        logger.info("关注订单: " + id + "  更新商品页面《已退单》状态失败");
-                    }
                 }
             }
         }
@@ -539,8 +562,18 @@ public class TimingTask {
 
         System.err.println("获取未开始关注订单: " + LocalDateTime.now());
         JSONObject followWKSOrder_JSONObject = orderService.getOrder("follow", "wks", false);
+        int j = 0;
         while (followWKSOrder_JSONObject == null) {
+            if (j == 3) {
+                return;
+            }
+            j++;
             logger.info("获取未开始关注订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             followWKSOrder_JSONObject = orderService.getOrder("follow", "wks", false);
         }
         logger.info("获取未开始关注订单成功");
@@ -634,8 +667,18 @@ public class TimingTask {
     public void handleWatchReturn() {
         System.err.println("获取退单中播放订单: " + LocalDateTime.now());
         JSONObject watchTDZOrder_JSONObject = orderService.getOrder("watch", "tdz", false);
+        int i = 0;
         while (watchTDZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取退单中播放订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             watchTDZOrder_JSONObject = orderService.getOrder("watch", "tdz", false);
         }
         logger.info("获取退单中播放订单成功");
@@ -670,8 +713,18 @@ public class TimingTask {
     public void handleLikeReturn() {
         System.err.println("获取退单中点赞订单: " + LocalDateTime.now());
         JSONObject likeTDZOrder_JSONObject = orderService.getOrder("like", "tdz", false);
+        int i = 0;
         while (likeTDZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取退单中点赞订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             likeTDZOrder_JSONObject = orderService.getOrder("like", "tdz", false);
         }
         logger.info("获取退单中点赞订单成功");
@@ -706,8 +759,18 @@ public class TimingTask {
     public void handleFollowReturn() {
         System.err.println("获取退单中关注订单: " + LocalDateTime.now());
         JSONObject followTDZOrder_JSONObject = orderService.getOrder("follow", "tdz", false);
+        int i = 0;
         while (followTDZOrder_JSONObject == null) {
+            if (i == 3) {
+                return;
+            }
+            i++;
             logger.info("获取退单中关注订单出错,休眠五秒重新获取");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             followTDZOrder_JSONObject = orderService.getOrder("follow", "tdz", false);
         }
         logger.info("获取退单中关注订单成功");
