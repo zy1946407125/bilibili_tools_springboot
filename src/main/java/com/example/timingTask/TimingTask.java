@@ -28,20 +28,15 @@ public class TimingTask {
 
     private Task task = Task.getTask();
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     void getWatch() {
         System.err.println("获取进行中播放订单: " + LocalDateTime.now());
         JSONObject watchJXZOrder_JSONObject = orderService.getOrder("watch", "jxz", false);
         while (watchJXZOrder_JSONObject == null) {
             System.out.println("获取进行中播放订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             watchJXZOrder_JSONObject = orderService.getOrder("watch", "jxz", false);
         }
+        System.out.println("获取进行中播放订单成功");
         if (watchJXZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无进行中播放订单");
         } else {
@@ -129,13 +124,9 @@ public class TimingTask {
         JSONObject watchWKSOrder_JSONObject = orderService.getOrder("watch", "wks", false);
         while (watchWKSOrder_JSONObject == null) {
             System.out.println("获取未开始播放订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             watchWKSOrder_JSONObject = orderService.getOrder("watch", "wks", false);
         }
+        System.out.println("获取未开始播放订单成功");
         if (watchWKSOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无未开始播放订单");
         } else {
@@ -224,20 +215,15 @@ public class TimingTask {
     }
 
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     void getLike() {
         System.err.println("获取进行中点赞订单: " + LocalDateTime.now());
         JSONObject likeJXZOrder_JSONObject = orderService.getOrder("like", "jxz", false);
         while (likeJXZOrder_JSONObject == null) {
             System.out.println("获取进行中点赞订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             likeJXZOrder_JSONObject = orderService.getOrder("like", "jxz", false);
         }
+        System.out.println("获取进行中点赞订单成功");
         if (likeJXZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无进行中点赞订单");
         } else {
@@ -325,13 +311,9 @@ public class TimingTask {
         JSONObject likeWKSOrder_JSONObject = orderService.getOrder("like", "wks", false);
         while (likeWKSOrder_JSONObject == null) {
             System.out.println("获取未开始点赞订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             likeWKSOrder_JSONObject = orderService.getOrder("like", "wks", false);
         }
+        System.out.println("获取未开始点赞订单成功");
         if (likeWKSOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无未开始点赞订单");
         } else {
@@ -419,20 +401,15 @@ public class TimingTask {
     }
 
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     void getFollow() {
         System.err.println("获取进行中关注订单: " + LocalDateTime.now());
         JSONObject followJXZOrder_JSONObject = orderService.getOrder("follow", "jxz", false);
         while (followJXZOrder_JSONObject == null) {
             System.out.println("获取进行中关注订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             followJXZOrder_JSONObject = orderService.getOrder("follow", "jxz", false);
         }
+        System.out.println("获取进行中关注订单成功");
         if (followJXZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无进行中关注订单");
         } else {
@@ -516,13 +493,9 @@ public class TimingTask {
         JSONObject followWKSOrder_JSONObject = orderService.getOrder("follow", "wks", false);
         while (followWKSOrder_JSONObject == null) {
             System.out.println("获取未开始关注订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             followWKSOrder_JSONObject = orderService.getOrder("follow", "wks", false);
         }
+        System.out.println("获取未开始关注订单成功");
         if (followWKSOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无未开始关注订单");
         } else {
@@ -608,20 +581,15 @@ public class TimingTask {
     }
 
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void handleWatchReturn() {
         System.err.println("获取退单中播放订单: " + LocalDateTime.now());
         JSONObject watchTDZOrder_JSONObject = orderService.getOrder("watch", "tdz", false);
         while (watchTDZOrder_JSONObject == null) {
             System.out.println("获取退单中播放订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             watchTDZOrder_JSONObject = orderService.getOrder("watch", "tdz", false);
         }
+        System.out.println("获取退单中播放订单成功");
         if (watchTDZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无退单中播放订单");
         } else {
@@ -648,20 +616,15 @@ public class TimingTask {
     }
 
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void handleLikeReturn() {
         System.err.println("获取退单中点赞订单: " + LocalDateTime.now());
         JSONObject likeTDZOrder_JSONObject = orderService.getOrder("like", "tdz", false);
         while (likeTDZOrder_JSONObject == null) {
             System.out.println("获取退单中点赞订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             likeTDZOrder_JSONObject = orderService.getOrder("like", "tdz", false);
         }
+        System.out.println("获取退单中点赞订单成功");
         if (likeTDZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无退单中点赞订单");
         } else {
@@ -688,20 +651,15 @@ public class TimingTask {
     }
 
 
-    @Async
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void handleFollowReturn() {
         System.err.println("获取退单中关注订单: " + LocalDateTime.now());
         JSONObject followTDZOrder_JSONObject = orderService.getOrder("follow", "tdz", false);
         while (followTDZOrder_JSONObject == null) {
             System.out.println("获取退单中关注订单出错,休眠五秒重新获取");
-            try {
-                Thread.sleep(5000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
             followTDZOrder_JSONObject = orderService.getOrder("follow", "tdz", false);
         }
+        System.out.println("获取退单中关注订单成功");
         if (followTDZOrder_JSONObject.getInteger("total") == 0) {
             System.err.println("暂无退单中关注订单");
         } else {
