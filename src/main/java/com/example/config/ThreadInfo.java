@@ -3,9 +3,9 @@ package com.example.config;
 public class ThreadInfo {
 
     private static ThreadInfo threadInfo = new ThreadInfo();
-    private int watchThreadNum = 100;
-    private int likeThreadNum = 10;
-    private int followThreadNum = 10;
+    private int watchThreadNum = 500;
+    private int likeThreadNum = 50;
+    private int followThreadNum = 50;
 
     private ThreadInfo() {
     }
