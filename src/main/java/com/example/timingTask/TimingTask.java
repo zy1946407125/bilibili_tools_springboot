@@ -132,6 +132,15 @@ public class TimingTask {
                         }
                         break;
                     }
+                } else {
+                    //视频BV号不正确，进行退单
+                    System.out.println("code:" + code + " 播放：进行中，BV号不正确，设置订单退单");
+                    Boolean status = orderService.orderReturn("watch", id);
+                    if (status) {
+                        System.out.println("播放订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("播放订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
                 }
             }
         }
@@ -319,6 +328,15 @@ public class TimingTask {
                         }
                         break;
                     }
+                } else {
+                    //视频BV号不正确，进行退单
+                    System.out.println("code:" + code + " 点赞 进行中：BV号不正确，设置订单退单");
+                    Boolean status = orderService.orderReturn("like", id);
+                    if (status) {
+                        System.out.println("点赞订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("点赞订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
                 }
             }
         }
@@ -405,7 +423,7 @@ public class TimingTask {
                     }
                 } else {
                     //视频BV号不正确，进行退单
-                    System.out.println("code:" + code + "点赞：BV号不正确，设置订单退单");
+                    System.out.println("code:" + code + " 点赞 未开始：BV号不正确，设置订单退单");
                     Boolean status = orderService.orderReturn("like", id);
                     if (status) {
                         System.out.println("点赞订单: " + id + "  更新商品页面《已退单》状态成功");
@@ -501,6 +519,15 @@ public class TimingTask {
                         }
                         break;
                     }
+                } else {
+                    //用户mid号不正确，进行退单
+                    System.out.println("code:" + code + " 关注 进行中：用户mid不正确，设置订单退单");
+                    Boolean status = orderService.orderReturn("follow", id);
+                    if (status) {
+                        System.out.println("关注订单: " + id + "  更新商品页面《已退单》状态成功");
+                    } else {
+                        System.out.println("关注订单: " + id + "  更新商品页面《已退单》状态失败");
+                    }
                 }
             }
         }
@@ -585,7 +612,7 @@ public class TimingTask {
 
                 } else {
                     //用户mid号不正确，进行退单
-                    System.out.println("code:" + code + "关注：用户mid不正确，设置订单退单");
+                    System.out.println("code:" + code + "关注 未开始：用户mid不正确，设置订单退单");
                     Boolean status = orderService.orderReturn("follow", id);
                     if (status) {
                         System.out.println("关注订单: " + id + "  更新商品页面《已退单》状态成功");
